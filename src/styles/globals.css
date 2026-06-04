@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body,
+  #root {
+    margin: 0;
+    height: 100%;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    overscroll-behavior-y: none;
+  }
+
+  ::selection {
+    background: var(--primary);
+    color: #fff;
+  }
+}
+
+@layer components {
+  /* Serif numerals — the InsightFlow editorial signature. */
+  .serif-num {
+    font-family: var(--font-head);
+    font-style: var(--head-style);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+
+  /* Reusable card shell: 1px line, 14px radius, no shadow. */
+  .card-shell {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-card);
+    padding: var(--card-pad);
+  }
+}

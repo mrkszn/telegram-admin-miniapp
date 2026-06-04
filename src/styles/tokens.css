@@ -1,0 +1,95 @@
+/* =============================================================
+   Voice + InsightFlow design tokens.
+   Source: design/iterations/insightflow/theme.css
+   Brand: violet primary (#7c3aed) + cyan accent (#06b6d4).
+   Headings: Instrument Serif italic. Body: Geist. Numerals: Geist Mono.
+   Telegram theme params (var(--tg-theme-*)) are layered on top by
+   src/lib/telegram/theme.ts at runtime.
+   ============================================================= */
+
+:root {
+  /* type */
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --font-head: 'Instrument Serif', 'Times New Roman', serif;
+  --head-style: italic;
+
+  /* brand */
+  --primary: #7c3aed;
+  --primary-hover: #6d28d9;
+  --primary-deep: #5b21b6;
+  --primary-soft: #ede6ff;
+  --primary-tint: #faf6ff;
+  --primary-on: #ffffff;
+  --accent: #06b6d4;
+  --grad-brand: linear-gradient(135deg, #a855f7 0%, #7c3aed 50%, #5b21b6 100%);
+
+  /* fixed secondary hues */
+  --mint: #34d5b0;
+  --amber: #e7a23b;
+  --rose: #e26d7a;
+  --success: #138a64;
+  --danger: #c14a4a;
+  --warning: #b45309;
+
+  /* geometry */
+  --r-tag: 6px;
+  --r-input: 8px;
+  --r-card: 14px;
+  --r-sheet: 18px;
+  --r-full: 999px;
+
+  /* density */
+  --card-pad: 16px;
+  --row-pad: 13px;
+  --kpi-size: 38px;
+  --section-gap: 18px;
+}
+
+/* ---- Light (paper) ----------------------------------------- */
+:root,
+[data-theme='light'] {
+  --bg: #f7f6f2;
+  --bg-soft: #fbfaf7;
+  --surface: #ffffff;
+  --surface-2: #f1efe9;
+  --line: #e6e2d8;
+  --line-strong: #d6d0c2;
+
+  --ink: #0b0b12;
+  --ink-2: #2a2a33;
+  --muted: #6b6a74;
+  --muted-2: #9a98a1;
+
+  --scrim: rgba(11, 11, 18, 0.45);
+  color-scheme: light;
+}
+
+/* ---- Dark -------------------------------------------------- */
+[data-theme='dark'] {
+  --bg: #0b0e17;
+  --bg-soft: #0f1320;
+  --surface: #141a27;
+  --surface-2: #1b2233;
+  --line: #232c40;
+  --line-strong: #324056;
+
+  --ink: #f3f4f8;
+  --ink-2: #c5c9d6;
+  --muted: #8a90a3;
+  --muted-2: #646b80;
+
+  --primary-soft: rgba(168, 85, 247, 0.18);
+  --primary-tint: rgba(124, 58, 237, 0.1);
+
+  --scrim: rgba(2, 4, 10, 0.62);
+  color-scheme: dark;
+}
+
+/* ---- Density tweak (optional) ------------------------------ */
+.density-compact {
+  --card-pad: 12px;
+  --row-pad: 10px;
+  --kpi-size: 31px;
+  --section-gap: 13px;
+}
