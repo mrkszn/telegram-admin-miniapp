@@ -6,7 +6,7 @@ export function RootRoute() {
   const { isReady, isBootstrapping, error } = useAuth()
 
   if (isReady) {
-    return <Navigate to="/example/dashboard" replace />
+    return <Navigate to="/dashboard" replace />
   }
   if (error) {
     return (

@@ -30,7 +30,7 @@ export function useAuth(options: UseAuthOptions = {}): UseAuthResult {
   const error = useSessionStore((s) => s.error)
 
   const apiBaseUrl = options.apiBaseUrl ?? import.meta.env.VITE_API_BASE_URL ?? ''
-  const authEndpoint = options.authEndpoint ?? import.meta.env.VITE_AUTH_ENDPOINT ?? '/auth/telegram'
+  const authEndpoint = options.authEndpoint ?? import.meta.env.VITE_AUTH_ENDPOINT ?? '/admin/auth'
   const disabled = options.disabled ?? false
 
   useEffect(() => {

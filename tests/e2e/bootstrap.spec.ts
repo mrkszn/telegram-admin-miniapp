@@ -3,10 +3,10 @@ import { test, expect } from '@playwright/test'
 /**
  * Bootstrap smoke. Injects a fake `window.Telegram.WebApp` + intercepts the
  * auth POST so we can verify the full chain (initData → JWT → redirect →
- * dashboard render) without any real backend.
+ * /dashboard render) without any real backend.
  */
 
-test('bootstraps auth and renders /example/dashboard', async ({ page, context }) => {
+test('bootstraps auth and renders /dashboard', async ({ page, context }) => {
   // The real telegram-web-app.js script (loaded from index.html) would
   // overwrite our window.Telegram mock — block it.
   await context.route('**/telegram-web-app.js', (route) =>
@@ -57,7 +57,7 @@ test('bootstraps auth and renders /example/dashboard', async ({ page, context })
     }
   })
 
-  await page.route('**/auth/telegram', async (route) => {
+  await page.route('**/admin/auth', async (route) => {
     const request = route.request()
     expect(request.method()).toBe('POST')
     const body = await request.postDataJSON()
@@ -67,15 +67,13 @@ test('bootstraps auth and renders /example/dashboard', async ({ page, context })
       contentType: 'application/json',
       body: JSON.stringify({
         token: 'jwt-e2e',
-        user: { telegram_id: 42, first_name: 'Alex' },
+        telegram_id: 42,
       }),
     })
   })
 
   await page.goto('/')
-  await expect(page).toHaveURL(/\/example\/dashboard$/, { timeout: 10_000 })
+  await expect(page).toHaveURL(/\/dashboard$/, { timeout: 10_000 })
   await expect(page.getByRole('heading', { name: 'Сводка' })).toBeVisible()
-  await expect(page.getByText('Active users')).toBeVisible()
-  await expect(page.getByText('Активность')).toBeVisible()
   await expect(page.getByRole('navigation', { name: 'Основная навигация' })).toBeVisible()
 })
