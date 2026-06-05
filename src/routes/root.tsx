@@ -1,6 +1,7 @@
 import { Navigate } from 'react-router-dom'
-import { Loader2, AlertCircle } from 'lucide-react'
+import { AlertCircle } from 'lucide-react'
 import { useAuth } from '@/lib/hooks/useAuth'
+import { BrandSpinner } from '@/components/feedback/BrandSpinner'
 
 export function RootRoute() {
   const { isReady, isBootstrapping, error } = useAuth()
@@ -26,12 +27,10 @@ export function RootRoute() {
   }
   return (
     <main className="flex min-h-screen items-center justify-center bg-bg text-ink">
-      <div className="flex flex-col items-center gap-3">
-        <Loader2 className="h-6 w-6 animate-spin text-brand" strokeWidth={1.75} />
-        <span className="text-sm text-muted">
-          {isBootstrapping ? 'Авторизация…' : 'Инициализация…'}
-        </span>
-      </div>
+      <BrandSpinner
+        size="lg"
+        label={isBootstrapping ? 'Авторизация…' : 'Инициализация…'}
+      />
     </main>
   )
 }

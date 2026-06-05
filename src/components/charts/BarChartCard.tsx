@@ -35,6 +35,8 @@ export function BarChartCard<T extends Record<string, unknown>>({
         {subtitle ? <p className="text-xs text-muted">{subtitle}</p> : null}
       </div>
       <BarChart
+        key={JSON.stringify(data)}
+        className="animate-fade-rise"
         data={data}
         index={index}
         categories={categories}
@@ -42,7 +44,8 @@ export function BarChartCard<T extends Record<string, unknown>>({
         valueFormatter={valueFormatter}
         layout={layout}
         showLegend={categories.length > 1}
-        showAnimation={false}
+        showAnimation
+        animationDuration={700}
         yAxisWidth={36}
         style={{ height }}
       />

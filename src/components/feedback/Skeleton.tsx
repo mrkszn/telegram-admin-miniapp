@@ -8,7 +8,11 @@ export function Skeleton({ className }: SkeletonProps) {
   return (
     <div
       aria-hidden="true"
-      className={cn('animate-pulse rounded-tag bg-surface-2', className)}
+      // surface-2 base + brand shimmer sweep on top (see globals.css).
+      className={cn(
+        'animate-shimmer rounded-tag bg-surface-2 bg-no-repeat',
+        className,
+      )}
     />
   )
 }

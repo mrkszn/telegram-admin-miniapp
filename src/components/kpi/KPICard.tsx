@@ -43,6 +43,11 @@ export function KPICard({
     <div
       className={cn(
         'flex min-w-0 flex-col gap-2 overflow-hidden rounded-card border border-line bg-surface p-4',
+        // Tap micro-interaction + enter animation. tw-animate-css ships
+        // these utilities; on tap the card subtly recedes (active:scale)
+        // and on mount it fades + rises 8 px into place.
+        'animate-fade-rise transition-transform duration-200 ease-out',
+        'active:scale-[0.98]',
         className,
       )}
       // container-type makes 1cqi == 1% of THIS card's inline-size —

@@ -1,5 +1,6 @@
 import { RouterProvider, createBrowserRouter } from 'react-router-dom'
 import { ThemeProvider } from '@/components/layout/ThemeProvider'
+import { BgParticles } from '@/components/feedback/BgParticles'
 import { RootRoute } from '@/routes/root'
 import { DashboardRoute } from '@/routes/dashboard'
 import { MetricsRoute } from '@/routes/metrics'
@@ -19,6 +20,7 @@ const router = createBrowserRouter([
 export function App() {
   return (
     <ThemeProvider>
+      <BgParticles />
       <RouterProvider router={router} />
     </ThemeProvider>
   )

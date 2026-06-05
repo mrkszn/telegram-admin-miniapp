@@ -34,15 +34,17 @@ export function LineChartCard<T extends Record<string, unknown>>({
         {subtitle ? <p className="text-xs text-muted">{subtitle}</p> : null}
       </div>
       <LineChart
+        key={JSON.stringify(data)}
         data={data}
         index={index}
         categories={categories}
         colors={colors}
         valueFormatter={valueFormatter}
         showLegend={categories.length > 1}
-        showAnimation={false}
+        showAnimation
+        animationDuration={700}
         yAxisWidth={36}
-        className={`h-[${height}px]`}
+        className={`h-[${height}px] animate-fade-rise`}
         style={{ height }}
       />
     </div>

@@ -56,6 +56,7 @@ export function DonutChartCard<T extends Record<string, unknown>>({
 
       <div className="relative" style={{ height }}>
         <DonutChart
+          key={JSON.stringify(data)}
           data={data}
           category={category}
           index={index}
@@ -63,8 +64,9 @@ export function DonutChartCard<T extends Record<string, unknown>>({
           valueFormatter={valueFormatter}
           variant={variant}
           showLabel={false}
-          showAnimation={false}
-          className="h-full w-full"
+          showAnimation
+          animationDuration={800}
+          className="h-full w-full animate-fade-rise"
         />
 
         {/* Center label — Tremor renders the value at center natively when

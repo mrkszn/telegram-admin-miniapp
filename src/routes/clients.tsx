@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Loader2, Search, X } from 'lucide-react'
+import { Search, X } from 'lucide-react'
+import { BrandSpinner } from '@/components/feedback/BrandSpinner'
 import { AppShell } from '@/components/layout/AppShell'
 import { Input } from '@/components/ui/input'
 import {
@@ -161,7 +162,7 @@ function SuggestionsPanel({ onPick }: { onPick(s: string): void }) {
 function SearchingHint() {
   return (
     <div className="flex items-center gap-2 text-sm text-muted">
-      <Loader2 className="h-3.5 w-3.5 animate-spin text-brand" strokeWidth={1.75} aria-hidden="true" />
+      <BrandSpinner size="sm" />
       <span>Поиск…</span>
     </div>
   )
@@ -314,7 +315,7 @@ function ProfileSheet({
         </SheetHeader>
         {loading ? (
           <div className="flex items-center gap-2 py-3 text-sm text-muted">
-            <Loader2 className="h-3.5 w-3.5 animate-spin text-brand" strokeWidth={1.75} />
+            <BrandSpinner size="sm" />
             <span>Загрузка профиля…</span>
           </div>
         ) : error ? (
