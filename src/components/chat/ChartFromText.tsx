@@ -110,10 +110,12 @@ export function ChartFromText({ text }: Props) {
         categories={['value']}
         colors={['violet']}
         // Vertical layout puts category names on the y-axis where each one
-        // shows in full — horizontal layout was dropping every other Russian
-        // label inside the tight chat bubble width.
+        // shows in full — horizontal was dropping every other Russian
+        // label inside the tight chat width. Generous per-row height makes
+        // the bars feel substantial when the chart now sits in the full
+        // chat column rather than the 82 %-bubble width.
         layout="vertical"
-        height={48 + data.length * 32}
+        height={64 + data.length * 44}
       />
     )
   }

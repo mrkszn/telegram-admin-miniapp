@@ -28,37 +28,44 @@ export function Message({ role, content, chart, className }: MessageProps) {
   return (
     <div
       className={cn(
-        'flex w-full animate-fade-rise gap-2',
-        rowClass[role],
+        'flex w-full animate-fade-rise flex-col gap-2',
+        // Use rowClass on a sibling row, not the wrapper, so the chart
+        // attachment below can ignore the bubble's max-width and use the
+        // full available width of the chat container.
         className,
       )}
     >
-      {role !== 'user' ? (
-        <div className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-line bg-surface text-muted">
-          <Sparkles className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-        </div>
-      ) : null}
-      <div className="flex max-w-[82%] flex-col gap-2">
+      <div className={cn('flex w-full gap-2', rowClass[role])}>
+        {role !== 'user' ? (
+          <div className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-line bg-surface text-muted">
+            <Sparkles className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+          </div>
+        ) : null}
         <div
           className={cn(
-            // Body font size + leading kept identical between user and agent
-            // bubbles so the chat reads as a balanced conversation, not
-            // marketing-vs-system.
-            'whitespace-pre-line px-3.5 py-2.5 text-[14px] leading-[1.45]',
+            'max-w-[82%] whitespace-pre-line px-3.5 py-2.5 text-[14px] leading-[1.45]',
             bubbleClass[role],
           )}
         >
           {role === 'thinking' ? <ThinkingDots /> : content}
         </div>
-        {chart ? (
-          <div className="animate-fade-rise overflow-hidden rounded-card border border-line bg-surface [animation-delay:120ms]">
-            {chart}
+        {role === 'user' ? (
+          <div className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-2 text-muted">
+            <User2 className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
           </div>
         ) : null}
       </div>
-      {role === 'user' ? (
-        <div className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-2 text-muted">
-          <User2 className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+      {chart ? (
+        // Chart sits OUTSIDE the bubble row → it gets the full chat
+        // column width (minus the 7 px avatar gutter on the agent side),
+        // so vertical-layout BarCharts have real room for category labels.
+        <div
+          className={cn(
+            'animate-fade-rise overflow-hidden rounded-card border border-line bg-surface [animation-delay:120ms]',
+            role === 'agent' || role === 'thinking' ? 'ml-9' : 'mr-9',
+          )}
+        >
+          {chart}
         </div>
       ) : null}
     </div>

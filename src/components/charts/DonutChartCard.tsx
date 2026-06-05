@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { DonutChart, type Color } from '@tremor/react'
 import { cn } from '@/lib/utils'
+import { CountUp } from '@/components/feedback/CountUp'
 import { CHART_COLORS, type ChartColor } from './palette'
 
 export interface DonutChartCardProps<T extends Record<string, unknown>> {
@@ -45,7 +46,16 @@ export function DonutChartCard<T extends Record<string, unknown>>({
     const v = row[category]
     return typeof v === 'number' ? s + v : s
   }, 0)
-  const total = centerLabel ?? autoTotal.toLocaleString('ru-RU')
+  // Use a CountUp when no explicit centerLabel was passed — number then
+  // ticks up while the ring is drawing, ending on the same value the
+  // legend shows below.
+  const centerNode =
+    centerLabel ??
+    (typeof autoTotal === 'number' ? (
+      <CountUp to={autoTotal} durationMs={900} delayMs={80} />
+    ) : (
+      String(autoTotal)
+    ))
 
   return (
     <div className={cn('rounded-card border border-line bg-surface p-4', className)}>
@@ -74,7 +84,7 @@ export function DonutChartCard<T extends Record<string, unknown>>({
             control. So we paint our own. */}
         {variant === 'donut' ? (
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
-            <span className="serif-num text-2xl leading-none text-ink">{total}</span>
+            <span className="serif-num text-2xl leading-none text-ink">{centerNode}</span>
             {centerCaption ? (
               <span className="mt-1 text-[11px] uppercase tracking-[0.08em] text-muted">
                 {centerCaption}
@@ -86,7 +96,8 @@ export function DonutChartCard<T extends Record<string, unknown>>({
 
       {/* Inline legend — Tremor's built-in legend is intentionally
           minimalist; we use our own chips so colours match the palette
-          and labels wrap nicely on narrow Telegram screens. */}
+          and labels wrap nicely on narrow Telegram screens. Each row
+          fade-rises with a stagger and the count tweens in alongside. */}
       <ul className="mt-3 flex flex-col gap-1.5">
         {data.map((row, i) => {
           const label = String(row[index] ?? '')
@@ -96,7 +107,8 @@ export function DonutChartCard<T extends Record<string, unknown>>({
           return (
             <li
               key={label || i}
-              className="flex items-center gap-2 text-[13px] text-ink-2"
+              className="flex animate-fade-rise items-center gap-2 text-[13px] text-ink-2"
+              style={{ animationDelay: `${300 + i * 70}ms` }}
             >
               <span
                 aria-hidden="true"
@@ -104,7 +116,13 @@ export function DonutChartCard<T extends Record<string, unknown>>({
               />
               <span className="min-w-0 flex-1 truncate">{label}</span>
               <span className="font-mono text-[12px] font-medium text-ink">
-                {valueFormatter ? valueFormatter(value) : value.toLocaleString('ru-RU')}
+                {valueFormatter ? (
+                  valueFormatter(value)
+                ) : Number.isFinite(value) ? (
+                  <CountUp to={value} delayMs={380 + i * 70} durationMs={650} />
+                ) : (
+                  String(value)
+                )}
               </span>
             </li>
           )

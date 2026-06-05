@@ -135,3 +135,17 @@
     animation: none !important;
   }
 }
+
+/* ── chart typography ───────────────────────────────────── */
+
+/* Tremor → Recharts SVG <text> elements (axis ticks, legend labels,
+   tooltip body). Switch from the default sans to Geist Mono so chart
+   chrome reads as quiet "data" — distinct from the conversational
+   body text. Slightly smaller for visual hierarchy. */
+.recharts-text,
+.recharts-cartesian-axis-tick-value,
+.recharts-tooltip-wrapper {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.01em;
+}
