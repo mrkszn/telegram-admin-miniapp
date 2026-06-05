@@ -2,7 +2,23 @@ import type { Config } from 'tailwindcss'
 import animate from 'tailwindcss-animate'
 
 const config: Config = {
-  content: ['./index.html', './src/**/*.{ts,tsx}'],
+  content: [
+    './index.html',
+    './src/**/*.{ts,tsx}',
+    // Tremor generates colour utility classes at runtime
+    // (`fill-violet-500`, `stroke-cyan-500`, …). Without this path Tailwind
+    // tree-shakes them out and chart bars/lines render uncoloured — on dark
+    // theme they become near-invisible against the surface.
+    './node_modules/@tremor/**/*.{js,mjs,ts}',
+  ],
+  // Safelist every shade Tremor may pick from our palette. Cheap insurance
+  // against future renames / new chart colours.
+  safelist: [
+    {
+      pattern:
+        /(bg|fill|stroke|text|border|ring)-(violet|cyan|amber|rose|emerald|indigo|sky|lime|orange|pink|teal)-(300|400|500|600)/,
+    },
+  ],
   darkMode: ['class', '[data-theme="dark"]'],
   theme: {
     container: {
