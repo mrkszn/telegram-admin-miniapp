@@ -9,12 +9,35 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import type { MetricsResponse } from '@/lib/api/types'
+import type { MetricsResponse, QuestionsResponse } from '@/lib/api/types'
 
 const fetchMetrics = vi.fn<(args: unknown) => Promise<MetricsResponse>>()
+const fetchQuestions = vi.fn<() => Promise<QuestionsResponse>>()
+
+// Default questions list — gives the picker a non-empty live key set
+// so the route doesn't sit suspended waiting for /admin/questions.
+fetchQuestions.mockResolvedValue({
+  questions: [
+    {
+      id: 'q-rating',
+      text: 'Оценка',
+      metric_key: 'rating',
+      expected_type: 'number',
+      enum_values: null,
+    },
+    {
+      id: 'q-would-return',
+      text: 'Готовность вернуться',
+      metric_key: 'would_return',
+      expected_type: 'enum',
+      enum_values: ['yes', 'maybe', 'no'],
+    },
+  ],
+})
 
 vi.mock('@/lib/api/admin', () => ({
   fetchMetrics: (args: unknown) => fetchMetrics(args),
+  fetchQuestions: () => fetchQuestions(),
 }))
 
 const { MetricsRoute } = await import('@/routes/metrics')

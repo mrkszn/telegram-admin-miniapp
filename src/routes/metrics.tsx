@@ -28,50 +28,78 @@ import { ADMIN_NAV } from './nav'
 
 type GroupBy = 'day' | 'week'
 
-function useMetricKeyOptions(): MetricKeyOption[] {
+interface MetricKeyOptionsState {
+  options: MetricKeyOption[]
+  loaded: boolean
+}
+
+function useMetricKeyOptions(): MetricKeyOptionsState {
   // Pull questions from backend on mount; fall back to the static seed list
   // if the call fails. Filters out 'text' questions — they're not chartable
-  // and only confuse the picker.
+  // and only confuse the picker. `loaded` lets the page suspend metric
+  // fetches until we know the real key list — otherwise the initial
+  // metricKey defaults to a stale STATIC value and produces a 404 on
+  // every mount, which the user reads as "metrics keep erroring out".
   const { data } = useApi<QuestionsResponse>('questions|active', () => fetchQuestions())
-  if (!data) return STATIC_METRIC_KEYS
+  if (!data) return { options: STATIC_METRIC_KEYS, loaded: false }
   const live = data.questions
     .filter((q) => q.expected_type !== 'text' && q.metric_key.trim())
     .map((q) => ({ value: q.metric_key, label: q.text || q.metric_key }))
-  return live.length > 0 ? live : STATIC_METRIC_KEYS
+  return {
+    options: live.length > 0 ? live : STATIC_METRIC_KEYS,
+    loaded: true,
+  }
 }
 
 export function MetricsRoute() {
-  const options = useMetricKeyOptions()
+  const { options, loaded } = useMetricKeyOptions()
   const fallbackKey = options[0]?.value ?? DEFAULT_METRIC_KEY
-  const [metricKey, setMetricKey] = useState<string>(fallbackKey)
+  // Initialise as null so we can tell "user hasn't picked yet" apart from
+  // "user explicitly picked something". Once the live list arrives we
+  // either inherit the user's pick (if it survived) or pick the first
+  // real key from the backend — never a static placeholder that 404s.
+  const [metricKey, setMetricKey] = useState<string | null>(null)
   const [preset, setPreset] = useState<DateRangePreset>(DEFAULT_PRESET)
   const [groupBy, setGroupBy] = useState<GroupBy>('day')
 
-  // If the picker had a stale key not in the live list, swap silently.
-  if (metricKey !== fallbackKey && !options.find((o) => o.value === metricKey)) {
+  // Sync the active key with the live options once they land.
+  if (
+    loaded &&
+    (metricKey === null || !options.find((o) => o.value === metricKey))
+  ) {
     setMetricKey(fallbackKey)
   }
 
   const range = useMemo(() => resolveRange(preset), [preset])
-  const key = `metrics|${metricKey}|${range.date_from}|${range.date_to}|${groupBy}`
+  const queryKey = metricKey
+    ? `metrics|${metricKey}|${range.date_from}|${range.date_to}|${groupBy}`
+    : null
 
-  const { data, error, isLoading, refetch } = useApi<MetricsResponse>(key, () =>
-    fetchMetrics({
-      metric_key: metricKey,
-      date_from: range.date_from,
-      date_to: range.date_to,
-      group_by: groupBy,
-    }),
+  // Suspend the metrics call until we have a key that's verified to exist
+  // in the backend's questions table. useApi returns loading state when
+  // the fetcher is null.
+  const { data, error, isLoading, refetch } = useApi<MetricsResponse>(
+    queryKey,
+    metricKey
+      ? () =>
+          fetchMetrics({
+            metric_key: metricKey,
+            date_from: range.date_from,
+            date_to: range.date_to,
+            group_by: groupBy,
+          })
+      : null,
   )
 
-  const label = labelFor(metricKey, options)
+  const displayKey = metricKey ?? fallbackKey
+  const label = labelFor(displayKey, options)
   const isNumber = data?.expected_type === 'number'
 
   return (
     <AppShell title="Метрики" navItems={ADMIN_NAV}>
       <div className="flex flex-col gap-4">
         <FilterBar
-          metricKey={metricKey}
+          metricKey={displayKey}
           options={options}
           onMetricKeyChange={setMetricKey}
           preset={preset}
