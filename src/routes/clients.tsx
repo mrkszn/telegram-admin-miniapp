@@ -397,12 +397,7 @@ function ProfileBody({ profile }: { profile: ClientProfileResponse }) {
           </p>
           <div className="flex flex-col gap-2">
             {profile.recent_cards.slice(0, 3).map((card, i) => (
-              <pre
-                key={i}
-                className="m-0 overflow-x-auto whitespace-pre-wrap break-words rounded-card border border-line bg-surface p-3 font-mono text-[11.5px] leading-[17px] text-ink-2"
-              >
-                {JSON.stringify(card, null, 2)}
-              </pre>
+              <RecentCardItem key={cardKey(card, i)} card={card} />
             ))}
           </div>
         </section>
@@ -425,6 +420,141 @@ function ProfileStat({
       <p className="text-[10.5px] font-semibold uppercase tracking-[0.06em] text-muted">{label}</p>
       <p className={cn('serif-num mt-0.5 text-2xl', valueClassName ?? 'text-ink')}>{value}</p>
     </div>
+  )
+}
+
+/* ── recent feedback card (was JSON dump) ────────────────── */
+
+interface ParsedCard {
+  sessionId: string | null
+  createdAt: string | null
+  summary: string | null
+  sentiment: string | null
+  topics: string[]
+  extras: Array<[string, string]>
+}
+
+const CARD_PRIMARY_FIELDS = new Set([
+  'session_id',
+  'summary_text',
+  'created_at',
+  'sentiment',
+  'topics',
+  // these are useful but we already show via dedicated chips/sections
+  'embedding',
+  'embedding_id',
+])
+
+function asString(v: unknown): string | null {
+  if (typeof v === 'string') return v
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v)
+  return null
+}
+
+function asStringArray(v: unknown): string[] {
+  if (!Array.isArray(v)) return []
+  return v
+    .map((it) => (typeof it === 'string' ? it : it != null ? String(it) : ''))
+    .filter(Boolean)
+}
+
+function parseCard(raw: Record<string, unknown>): ParsedCard {
+  return {
+    sessionId: asString(raw['session_id']),
+    createdAt: asString(raw['created_at']),
+    summary: asString(raw['summary_text']),
+    sentiment: asString(raw['sentiment']),
+    topics: asStringArray(raw['topics']),
+    extras: Object.entries(raw)
+      .filter(([k, v]) => !CARD_PRIMARY_FIELDS.has(k) && v != null && v !== '')
+      .slice(0, 5)
+      .map(([k, v]) => [k, typeof v === 'string' ? v : JSON.stringify(v)]),
+  }
+}
+
+function cardKey(raw: Record<string, unknown>, fallback: number): string {
+  const id = asString(raw['session_id'])
+  return id ?? `card-${fallback}`
+}
+
+const SENTIMENT_LABEL: Record<string, string> = {
+  positive: 'позитивный',
+  neutral: 'нейтральный',
+  negative: 'негативный',
+}
+
+const SENTIMENT_CLASS: Record<string, string> = {
+  positive: 'bg-mint/15 text-success',
+  neutral: 'bg-surface-2 text-muted',
+  negative: 'bg-rose/15 text-danger',
+}
+
+function formatCardDate(iso: string | null): string | null {
+  if (!iso) return null
+  const dt = new Date(iso)
+  if (Number.isNaN(dt.getTime())) return iso.slice(0, 10)
+  return dt.toLocaleString('ru-RU', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+function RecentCardItem({ card }: { card: Record<string, unknown> }) {
+  const parsed = parseCard(card)
+  const sentiment = parsed.sentiment?.toLowerCase()
+  const date = formatCardDate(parsed.createdAt)
+
+  return (
+    <article className="rounded-card border border-line bg-surface p-3.5">
+      <header className="flex flex-wrap items-center gap-2">
+        {sentiment && SENTIMENT_LABEL[sentiment] ? (
+          <span
+            className={cn(
+              'inline-flex rounded-tag px-2 py-0.5 text-[11px] font-medium',
+              SENTIMENT_CLASS[sentiment] ?? 'bg-surface-2 text-muted',
+            )}
+          >
+            {SENTIMENT_LABEL[sentiment]}
+          </span>
+        ) : null}
+        {date ? <span className="text-[12px] text-muted">{date}</span> : null}
+      </header>
+
+      {parsed.summary ? (
+        <p className="mt-2 whitespace-pre-line text-[14px] leading-[1.5] text-ink">
+          {parsed.summary}
+        </p>
+      ) : (
+        <p className="mt-2 text-[13px] italic text-muted">Без описания.</p>
+      )}
+
+      {parsed.topics.length > 0 ? (
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {parsed.topics.slice(0, 8).map((t) => (
+            <span
+              key={t}
+              className="rounded-full bg-surface-2 px-2 py-0.5 text-[11px] text-ink-2"
+            >
+              {t}
+            </span>
+          ))}
+        </div>
+      ) : null}
+
+      {parsed.extras.length > 0 ? (
+        <dl className="mt-3 flex flex-col gap-0.5 border-t border-line pt-2 text-[11.5px] text-muted">
+          {parsed.extras.map(([k, v]) => (
+            <div key={k} className="flex gap-2">
+              <dt className="shrink-0 font-mono text-muted-2">{k}</dt>
+              <dd className="min-w-0 flex-1 truncate text-ink-2">{v}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
+    </article>
   )
 }
 

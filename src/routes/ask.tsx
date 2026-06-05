@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { AppShell } from '@/components/layout/AppShell'
 import { ChatWidget, type ChatMessage, type ChatWidgetHandle } from '@/components/chat/ChatWidget'
+import { ChartFromText } from '@/components/chat/ChartFromText'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { askAdmin } from '@/lib/api/admin'
 import { bootstrapAuth } from '@/lib/telegram/auth'
@@ -51,7 +52,7 @@ export function AskRoute() {
             id: nextId(),
             role: 'agent',
             content: res.answer_text,
-            chart: res.chart_text ? <ChartPre text={res.chart_text} /> : undefined,
+            chart: res.chart_text ? <ChartFromText text={res.chart_text} /> : undefined,
           },
         ])
       } catch (err) {
@@ -91,14 +92,6 @@ export function AskRoute() {
 }
 
 /* ── helpers ────────────────────────────────────────────── */
-
-function ChartPre({ text }: { text: string }) {
-  return (
-    <pre className="m-0 max-h-72 overflow-x-auto whitespace-pre-wrap break-words px-3 py-3 font-mono text-[12px] leading-[17px] text-ink-2">
-      {text}
-    </pre>
-  )
-}
 
 function SuggestedPrompts({ onPick }: { onPick(p: string): void }) {
   return (
