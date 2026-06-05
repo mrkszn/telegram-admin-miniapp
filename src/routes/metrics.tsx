@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { ChevronDown } from 'lucide-react'
+import { useMemo, useState, type ComponentType, type SVGProps } from 'react'
+import { ChevronDown, BarChart3, PieChart } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
 import { DateRangeChips } from '@/components/filters/DateRangeChips'
 import {
@@ -380,6 +380,8 @@ function EnumView({ data, label }: { data: MetricsResponse; label: string }) {
   )
 }
 
+type LucideIcon = ComponentType<SVGProps<SVGSVGElement>>
+
 function EnumChartKindToggle({
   value,
   onChange,
@@ -387,9 +389,9 @@ function EnumChartKindToggle({
   value: EnumChartKind
   onChange(next: EnumChartKind): void
 }) {
-  const options: Array<{ value: EnumChartKind; label: string }> = [
-    { value: 'bar', label: 'Столбцы' },
-    { value: 'donut', label: 'Кольцо' },
+  const options: Array<{ value: EnumChartKind; label: string; Icon: LucideIcon }> = [
+    { value: 'bar', label: 'Столбцы', Icon: BarChart3 },
+    { value: 'donut', label: 'Кольцо', Icon: PieChart },
   ]
   return (
     <div
@@ -397,20 +399,22 @@ function EnumChartKindToggle({
       aria-label="Тип графика"
       className="inline-flex w-fit rounded-full border border-line bg-surface p-0.5"
     >
-      {options.map((o) => {
-        const active = o.value === value
+      {options.map(({ value: v, label, Icon }) => {
+        const active = v === value
         return (
           <button
-            key={o.value}
+            key={v}
             type="button"
+            aria-label={label}
             aria-pressed={active}
-            onClick={() => onChange(o.value)}
+            title={label}
+            onClick={() => onChange(v)}
             className={cn(
-              'h-7 rounded-full px-3 text-[12px] font-medium transition-colors',
-              active ? 'bg-brand text-brand-on' : 'text-muted',
+              'flex h-8 w-9 items-center justify-center rounded-full transition-colors',
+              active ? 'bg-brand text-brand-on' : 'text-muted hover:text-ink-2',
             )}
           >
-            {o.label}
+            <Icon className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
           </button>
         )
       })}

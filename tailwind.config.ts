@@ -114,9 +114,13 @@ const config: Config = {
             muted: 'var(--bg-soft)',
             subtle: 'var(--surface-2)',
             DEFAULT: 'var(--surface)',
-            emphasis: 'var(--ink)',
+            // emphasis is what Tremor uses for the hover tooltip card.
+            // Mapping it to --ink (inverse) made the tooltip blend into
+            // the theme. surface-2 is the same family as the surface but
+            // a step apart, so the tooltip stands out without screaming.
+            emphasis: 'var(--surface-2)',
           },
-          border: { DEFAULT: 'var(--line)' },
+          border: { DEFAULT: 'var(--line-strong)' },
           ring: { DEFAULT: 'var(--line-strong)' },
           content: {
             subtle: 'var(--muted-2)',
@@ -139,9 +143,9 @@ const config: Config = {
             muted: 'var(--bg-soft)',
             subtle: 'var(--surface-2)',
             DEFAULT: 'var(--surface)',
-            emphasis: 'var(--ink)',
+            emphasis: 'var(--surface-2)',
           },
-          border: { DEFAULT: 'var(--line)' },
+          border: { DEFAULT: 'var(--line-strong)' },
           ring: { DEFAULT: 'var(--line-strong)' },
           content: {
             subtle: 'var(--muted-2)',
