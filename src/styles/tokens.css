@@ -2,7 +2,9 @@
    Voice + InsightFlow design tokens.
    Source: design/iterations/insightflow/theme.css
    Brand: violet primary (#7c3aed) + cyan accent (#06b6d4).
-   Headings: Instrument Serif italic. Body: Geist. Numerals: Geist Mono.
+   Typography: Geist Sans (body + headings), Geist Mono (numerals).
+   (Headings used to be Instrument Serif italic — switched to Geist for
+   better Cyrillic legibility and to stop long words overflowing KPI cards.)
    Telegram theme params (var(--tg-theme-*)) are layered on top by
    src/lib/telegram/theme.ts at runtime.
    ============================================================= */
@@ -11,8 +13,11 @@
   /* type */
   --font-sans: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: 'Geist Mono Variable', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-  --font-head: 'Instrument Serif', 'Times New Roman', serif;
-  --head-style: italic;
+  /* Heading font kept as a CSS var so a future preference can flip back
+     to Instrument Serif without touching every component. */
+  --font-head: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  --head-style: normal;
+  --head-weight: 600;
 
   /* brand */
   --primary: #7c3aed;
@@ -42,7 +47,9 @@
   /* density */
   --card-pad: 16px;
   --row-pad: 13px;
-  --kpi-size: 38px;
+  /* KPI value font-size — shrunk from 38px to 30px so long Russian words
+     like «нейтрально» fit inside the 2-col card grid on 375px width. */
+  --kpi-size: 30px;
   --section-gap: 18px;
 }
 

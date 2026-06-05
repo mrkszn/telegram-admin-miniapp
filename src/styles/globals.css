@@ -31,10 +31,13 @@
 }
 
 @layer components {
-  /* Serif numerals — the InsightFlow editorial signature. */
+  /* Display numerals — Geist tabular figures. Class name kept as `.serif-num`
+     for backward compatibility with components that already reference it;
+     the actual font is whatever --font-head resolves to (currently Geist). */
   .serif-num {
     font-family: var(--font-head);
     font-style: var(--head-style);
+    font-weight: var(--head-weight);
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.01em;
   }

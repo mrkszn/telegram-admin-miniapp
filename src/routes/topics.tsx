@@ -155,14 +155,14 @@ function MentionsPlaceholder() {
     <section className="flex flex-col gap-2">
       <header className="flex items-baseline gap-2">
         <span className="serif-num text-base text-muted-2">01</span>
-        <h2 className="font-serif text-lg italic">Упоминания</h2>
+        <h2 className="font-serif text-lg">Упоминания</h2>
       </header>
       <div className="card-shell flex items-start gap-3">
         <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-soft text-brand-deep">
           <Clock className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
         </span>
         <div className="flex flex-col gap-1.5">
-          <p className="font-serif text-lg italic leading-tight text-ink">
+          <p className="font-serif text-lg leading-tight text-ink">
             Следующая итерация
           </p>
           <p className="text-sm leading-relaxed text-muted">

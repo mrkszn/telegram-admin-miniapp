@@ -30,7 +30,7 @@ export function LineChartCard<T extends Record<string, unknown>>({
   return (
     <div className={cn('rounded-card border border-line bg-surface p-4', className)}>
       <div className="mb-3 flex flex-col gap-0.5">
-        <h3 className="font-serif text-lg italic leading-tight text-ink">{title}</h3>
+        <h3 className="font-serif text-lg leading-tight text-ink">{title}</h3>
         {subtitle ? <p className="text-xs text-muted">{subtitle}</p> : null}
       </div>
       <LineChart

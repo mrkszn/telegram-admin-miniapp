@@ -42,16 +42,18 @@ export function KPICard({
   return (
     <div
       className={cn(
-        'flex flex-col gap-2 rounded-card border border-line bg-surface p-4',
+        'flex min-w-0 flex-col gap-2 overflow-hidden rounded-card border border-line bg-surface p-4',
         className,
       )}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-medium uppercase tracking-wide text-muted">{label}</span>
+        <span className="truncate text-xs font-medium uppercase tracking-wide text-muted">
+          {label}
+        </span>
         {delta ? (
           <span
             className={cn(
-              'inline-flex items-center gap-0.5 rounded-tag px-1.5 py-0.5 text-[11px] font-medium tabular-nums',
+              'inline-flex shrink-0 items-center gap-0.5 rounded-tag px-1.5 py-0.5 text-[11px] font-medium tabular-nums',
               deltaTone[deltaKind],
             )}
           >
@@ -60,8 +62,15 @@ export function KPICard({
           </span>
         ) : null}
       </div>
-      <div className="serif-num text-[length:var(--kpi-size)] leading-none text-ink">{value}</div>
-      {caption ? <div className="text-xs text-muted">{caption}</div> : null}
+      <div
+        className="serif-num break-words text-[length:var(--kpi-size)] leading-tight text-ink"
+        // Long Russian sentiment words («нейтрально») used to overflow the
+        // 2-col grid cell. break-words + leading-tight + overflow-hidden on
+        // the parent let them wrap to a second line gracefully.
+      >
+        {value}
+      </div>
+      {caption ? <div className="truncate text-xs text-muted">{caption}</div> : null}
       {spark ? <div className="mt-1 h-8">{spark}</div> : null}
     </div>
   )

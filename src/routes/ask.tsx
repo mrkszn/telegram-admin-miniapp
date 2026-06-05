@@ -103,7 +103,7 @@ function ChartPre({ text }: { text: string }) {
 function SuggestedPrompts({ onPick }: { onPick(p: string): void }) {
   return (
     <div className="flex max-w-md flex-col items-center gap-3 text-center">
-      <p className="font-serif text-[22px] italic leading-tight text-ink">
+      <p className="font-serif text-[22px] leading-tight text-ink">
         Спросите о данных.
       </p>
       <p className="text-sm leading-relaxed text-muted">

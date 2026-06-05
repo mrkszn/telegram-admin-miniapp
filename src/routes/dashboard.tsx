@@ -120,7 +120,7 @@ function DashboardContent({ overview }: { overview: OverviewResponse }) {
       <section className="flex flex-col gap-2.5">
         <header className="flex items-baseline gap-2">
           <span className="serif-num text-base text-muted-2">01</span>
-          <h2 className="font-serif text-lg italic">Топ-5 топиков · позитив</h2>
+          <h2 className="font-serif text-lg">Топ-5 топиков · позитив</h2>
         </header>
         <TopTopicsList topics={overview.top_positive_topics} tone="positive" limit={5} />
       </section>

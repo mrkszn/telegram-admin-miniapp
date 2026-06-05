@@ -34,7 +34,9 @@ export function Header({ title, left, right, onBack, className }: HeaderProps) {
             </button>
           ) : null)}
       </div>
-      <h1 className="truncate font-serif text-base italic leading-none text-ink">{title}</h1>
+      <h1 className="truncate font-serif text-base font-semibold leading-none text-ink">
+        {title}
+      </h1>
       <div className="flex min-w-9 items-center justify-end">{right}</div>
     </header>
   )
