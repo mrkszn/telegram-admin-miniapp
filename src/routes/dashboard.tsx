@@ -6,6 +6,7 @@ import { TopTopicsCard } from '@/components/topics/TopTopicsCard'
 import { TopTopicsList } from '@/components/topics/TopTopicsList'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { Skeleton } from '@/components/feedback/Skeleton'
+import { CountUp } from '@/components/feedback/CountUp'
 import { useApi } from '@/lib/hooks/useApi'
 import { resolveRange, DEFAULT_PRESET, type DateRangePreset } from '@/lib/date-range'
 import { fetchOverview } from '@/lib/api/admin'
@@ -34,6 +35,14 @@ function positiveSharePct(o: OverviewResponse): string {
   const total = pos + neg
   if (total === 0) return '—'
   return `${Math.round((pos / total) * 100)}%`
+}
+
+function positiveShareNumber(o: OverviewResponse): number | null {
+  const pos = o.top_positive_topics.reduce((s, t) => s + t.count, 0)
+  const neg = o.top_negative_topics.reduce((s, t) => s + t.count, 0)
+  const total = pos + neg
+  if (total === 0) return null
+  return Math.round((pos / total) * 100)
 }
 
 function uniqueTopicsCount(o: OverviewResponse): number {
@@ -82,23 +91,46 @@ function DashboardContent({ overview }: { overview: OverviewResponse }) {
       <div className="grid grid-cols-2 gap-2.5">
         <KPICard
           label="Сессий"
-          value={overview.sessions_count.toLocaleString('ru-RU')}
+          value={<CountUp to={overview.sessions_count} durationMs={900} />}
           caption="за период"
         />
         <KPICard
           label="Средний sentiment"
           value={sentimentLabel(overview.avg_sentiment)}
-          delta={overview.avg_sentiment != null ? overview.avg_sentiment.toFixed(2) : '—'}
+          delta={
+            overview.avg_sentiment != null ? (
+              <CountUp
+                to={overview.avg_sentiment}
+                durationMs={900}
+                delayMs={120}
+                fractionDigits={2}
+                prefix={overview.avg_sentiment > 0 ? '+' : ''}
+              />
+            ) : (
+              '—'
+            )
+          }
           deltaKind={sentimentDeltaKind(overview.avg_sentiment)}
         />
         <KPICard
           label="Топиков"
-          value={uniqueTopicsCount(overview).toString()}
+          value={<CountUp to={uniqueTopicsCount(overview)} durationMs={900} delayMs={150} />}
           caption="уникальных"
         />
         <KPICard
           label="Позитив"
-          value={positiveSharePct(overview)}
+          value={
+            positiveShareNumber(overview) != null ? (
+              <CountUp
+                to={positiveShareNumber(overview)!}
+                durationMs={900}
+                delayMs={200}
+                suffix="%"
+              />
+            ) : (
+              positiveSharePct(overview)
+            )
+          }
           caption={totalMentions > 0 ? `${positiveCount} из ${totalMentions}` : 'доля'}
           deltaKind={positiveCount >= negativeCount ? 'positive' : 'negative'}
         />

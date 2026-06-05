@@ -1,4 +1,6 @@
 import { cn } from '@/lib/utils'
+import { AnimatedBar } from '@/components/feedback/AnimatedBar'
+import { CountUp } from '@/components/feedback/CountUp'
 import type { TopicCount } from '@/lib/api/types'
 
 interface TopTopicsListProps {
@@ -39,20 +41,22 @@ export function TopTopicsList({
         <div
           key={t.topic}
           className={cn(
-            'flex items-center gap-2.5 px-3.5 py-3',
+            'flex animate-fade-rise items-center gap-2.5 px-3.5 py-3',
             i < items.length - 1 && 'border-b border-line',
           )}
+          style={{ animationDelay: `${i * 50}ms` }}
         >
           <span className="serif-num w-5 text-[15px] text-muted-2">{i + 1}</span>
           <span className="flex-1 truncate text-sm font-medium text-ink">{t.topic}</span>
-          <div className="h-2 w-[90px] overflow-hidden rounded-full bg-surface-2">
-            <div
-              className={cn('h-full rounded-full', barTone[tone])}
-              style={{ width: `${(t.count / max) * 100}%` }}
-            />
-          </div>
+          <AnimatedBar
+            pct={(t.count / max) * 100}
+            className={barTone[tone]}
+            wrapperClassName="w-[90px]"
+            delayMs={120 + i * 70}
+            label={`${t.topic}: ${t.count}`}
+          />
           <span className="w-8 text-right font-mono text-[13px] font-medium tabular-nums text-ink">
-            {t.count}
+            <CountUp to={t.count} delayMs={140 + i * 70} durationMs={650} />
           </span>
         </div>
       ))}

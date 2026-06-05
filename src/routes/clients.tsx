@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { Search, X } from 'lucide-react'
 import { BrandSpinner } from '@/components/feedback/BrandSpinner'
+import { CountUp } from '@/components/feedback/CountUp'
 import { AppShell } from '@/components/layout/AppShell'
 import { Input } from '@/components/ui/input'
 import {
@@ -360,14 +361,25 @@ function ProfileBody({ profile }: { profile: ClientProfileResponse }) {
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        <ProfileStat label="Сессий" value={profile.sessions_count.toString()} />
+        <ProfileStat
+          label="Сессий"
+          value={<CountUp to={profile.sessions_count} durationMs={900} />}
+        />
         <ProfileStat
           label="Sentiment"
           valueClassName={sentColor}
           value={
-            profile.avg_sentiment != null
-              ? `${profile.avg_sentiment > 0 ? '+' : ''}${profile.avg_sentiment.toFixed(2)}`
-              : '—'
+            profile.avg_sentiment != null ? (
+              <CountUp
+                to={profile.avg_sentiment}
+                durationMs={900}
+                delayMs={120}
+                fractionDigits={2}
+                prefix={profile.avg_sentiment > 0 ? '+' : ''}
+              />
+            ) : (
+              '—'
+            )
           }
         />
       </div>
@@ -378,10 +390,11 @@ function ProfileBody({ profile }: { profile: ClientProfileResponse }) {
             Топики
           </p>
           <div className="flex flex-wrap gap-1.5">
-            {profile.top_topics.slice(0, 6).map((t) => (
+            {profile.top_topics.slice(0, 6).map((t, i) => (
               <span
                 key={t.topic}
-                className="rounded-full bg-surface-2 px-2.5 py-1 text-[12px] text-ink-2"
+                className="animate-fade-rise rounded-full bg-surface-2 px-2.5 py-1 text-[12px] text-ink-2"
+                style={{ animationDelay: `${200 + i * 60}ms` }}
               >
                 {t.topic}{' '}
                 <span className="ml-1 font-mono text-muted-2">{t.count}</span>
@@ -398,7 +411,13 @@ function ProfileBody({ profile }: { profile: ClientProfileResponse }) {
           </p>
           <div className="flex flex-col gap-2">
             {profile.recent_cards.slice(0, 3).map((card, i) => (
-              <RecentCardItem key={cardKey(card, i)} card={card} />
+              <div
+                key={cardKey(card, i)}
+                className="animate-fade-rise"
+                style={{ animationDelay: `${420 + i * 90}ms` }}
+              >
+                <RecentCardItem card={card} />
+              </div>
             ))}
           </div>
         </section>
@@ -413,7 +432,7 @@ function ProfileStat({
   valueClassName,
 }: {
   label: string
-  value: string
+  value: ReactNode
   valueClassName?: string
 }) {
   return (

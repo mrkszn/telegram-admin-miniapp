@@ -56,7 +56,9 @@ describe('DashboardRoute', () => {
 
     const kpiSentiment = screen.getByText('Средний sentiment').closest('div')!.parentElement!
     expect(within(kpiSentiment).getByText('позитив')).toBeInTheDocument()
-    expect(within(kpiSentiment).getByText('0.42')).toBeInTheDocument()
+    // ru-RU decimal separator from CountUp's toLocaleString, + sign because
+    // the sentiment is positive.
+    expect(within(kpiSentiment).getByText('+0,42')).toBeInTheDocument()
 
     const kpiTopics = screen.getByText('Топиков').closest('div')!.parentElement!
     // 5 positive + 2 negative = 7 distinct (no overlap).

@@ -13,6 +13,8 @@ import { BarChartCard } from '@/components/charts/BarChartCard'
 import { DonutChartCard } from '@/components/charts/DonutChartCard'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { Skeleton } from '@/components/feedback/Skeleton'
+import { AnimatedBar } from '@/components/feedback/AnimatedBar'
+import { CountUp } from '@/components/feedback/CountUp'
 import { useApi } from '@/lib/hooks/useApi'
 import { resolveRange, DEFAULT_PRESET, type DateRangePreset } from '@/lib/date-range'
 import { fetchMetrics, fetchQuestions } from '@/lib/api/admin'
@@ -344,7 +346,13 @@ function EnumView({ data, label }: { data: MetricsResponse; label: string }) {
           index="value"
           categories={['count']}
           colors={['violet']}
-          height={180}
+          // Vertical layout keeps every category label visible on the y-axis
+          // — horizontal layout was dropping every other label on narrow
+          // 375 px Telegram screens, leaving only "Первый раз" / "Меньше
+          // месяца" out of five categories.
+          layout="vertical"
+          // Taller canvas so 5+ rows fit comfortably with the rotated layout.
+          height={32 + chartData.length * 36}
         />
       ) : (
         <DonutChartCard
@@ -362,13 +370,15 @@ function EnumView({ data, label }: { data: MetricsResponse; label: string }) {
         <span>
           Всего:{' '}
           <span className="serif-num text-base text-ink">
-            {total.toLocaleString('ru-RU')}
+            <CountUp to={total} durationMs={900} />
           </span>
         </span>
         {unknown > 0 ? (
           <span>
             Не определено:{' '}
-            <span className="serif-num text-base text-ink">{unknown}</span>
+            <span className="serif-num text-base text-ink">
+              <CountUp to={unknown} durationMs={900} delayMs={120} />
+            </span>
           </span>
         ) : null}
       </div>
@@ -383,22 +393,29 @@ function EnumView({ data, label }: { data: MetricsResponse; label: string }) {
             <div
               key={d.value}
               className={cn(
-                'flex items-center gap-2.5 px-3.5 py-3',
+                'flex animate-fade-rise items-center gap-2.5 px-3.5 py-3',
                 i < dist.length - 1 && 'border-b border-line',
               )}
+              style={{ animationDelay: `${i * 60}ms` }}
             >
               <span className="flex-1 truncate text-sm font-medium text-ink">{d.value}</span>
-              <div className="h-2 w-[92px] overflow-hidden rounded-full bg-surface-2">
-                <div
-                  className="h-full rounded-full bg-brand"
-                  style={{ width: `${(d.count / Math.max(max, 1)) * 100}%` }}
-                />
-              </div>
+              <AnimatedBar
+                pct={(d.count / Math.max(max, 1)) * 100}
+                className="bg-brand"
+                wrapperClassName="w-[92px]"
+                delayMs={150 + i * 80}
+                label={`${d.value}: ${d.count}`}
+              />
               <span className="w-[38px] text-right font-mono text-[13px] font-medium text-ink">
-                {d.count}
+                <CountUp to={d.count} delayMs={180 + i * 80} durationMs={650} />
               </span>
               <span className="w-[40px] text-right font-mono text-[12px] font-medium text-muted-2">
-                {Math.round(d.pct * 100)}%
+                <CountUp
+                  to={Math.round(d.pct * 100)}
+                  delayMs={200 + i * 80}
+                  durationMs={650}
+                  suffix="%"
+                />
               </span>
             </div>
           ))}

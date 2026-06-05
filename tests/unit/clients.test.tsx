@@ -114,8 +114,9 @@ describe('ClientsRoute', () => {
     expect(screen.getByText('Сессий')).toBeInTheDocument()
     // sessions value (Сессий = 7)
     expect(screen.getByText('7')).toBeInTheDocument()
-    // signed sentiment (-0.18)
-    expect(screen.getByText('-0.18')).toBeInTheDocument()
+    // signed sentiment (-0.18) — CountUp formats via toLocaleString('ru-RU'),
+    // so the decimal separator is a comma.
+    expect(screen.getByText('-0,18')).toBeInTheDocument()
     // first top topic — appears in both top_topics chips and recent_cards JSON
     expect(screen.getAllByText(/wait_time/).length).toBeGreaterThanOrEqual(1)
   })

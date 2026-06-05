@@ -26,18 +26,34 @@ const rowClass: Record<MessageRole, string> = {
 
 export function Message({ role, content, chart, className }: MessageProps) {
   return (
-    <div className={cn('flex w-full gap-2', rowClass[role], className)}>
+    <div
+      className={cn(
+        'flex w-full animate-fade-rise gap-2',
+        rowClass[role],
+        className,
+      )}
+    >
       {role !== 'user' ? (
         <div className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-line bg-surface text-muted">
           <Sparkles className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
         </div>
       ) : null}
-      <div className="flex max-w-[80%] flex-col gap-2">
-        <div className={cn('px-3 py-2 text-sm leading-snug', bubbleClass[role])}>
+      <div className="flex max-w-[82%] flex-col gap-2">
+        <div
+          className={cn(
+            // Body font size + leading kept identical between user and agent
+            // bubbles so the chat reads as a balanced conversation, not
+            // marketing-vs-system.
+            'whitespace-pre-line px-3.5 py-2.5 text-[14px] leading-[1.45]',
+            bubbleClass[role],
+          )}
+        >
           {role === 'thinking' ? <ThinkingDots /> : content}
         </div>
         {chart ? (
-          <div className="overflow-hidden rounded-card border border-line bg-surface">{chart}</div>
+          <div className="animate-fade-rise overflow-hidden rounded-card border border-line bg-surface [animation-delay:120ms]">
+            {chart}
+          </div>
         ) : null}
       </div>
       {role === 'user' ? (

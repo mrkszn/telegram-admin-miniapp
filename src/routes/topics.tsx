@@ -5,6 +5,8 @@ import { DateRangeChips } from '@/components/filters/DateRangeChips'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { Skeleton } from '@/components/feedback/Skeleton'
+import { AnimatedBar } from '@/components/feedback/AnimatedBar'
+import { CountUp } from '@/components/feedback/CountUp'
 import { useApi } from '@/lib/hooks/useApi'
 import { resolveRange, DEFAULT_PRESET, type DateRangePreset } from '@/lib/date-range'
 import { fetchTopics } from '@/lib/api/admin'
@@ -93,17 +95,22 @@ function TopBars({
           {topics.map((t, i) => {
             const pct = max > 0 ? (t.count / max) * 100 : 0
             return (
-              <li key={t.topic} className="flex items-center gap-2.5">
+              <li
+                key={`${tone}|${t.topic}`}
+                className="flex animate-fade-rise items-center gap-2.5"
+                style={{ animationDelay: `${i * 60}ms` }}
+              >
                 <span className="serif-num w-5 text-[15px] text-muted-2">{i + 1}</span>
                 <span className="flex-[0_0_38%] truncate text-[13.5px] text-ink">{t.topic}</span>
-                <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface-2">
-                  <div
-                    className={cn('h-full rounded-full', barColor)}
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
+                <AnimatedBar
+                  pct={pct}
+                  className={barColor}
+                  wrapperClassName="flex-1"
+                  delayMs={120 + i * 80}
+                  label={`${t.topic}: ${t.count}`}
+                />
                 <span className="w-[30px] text-right font-mono text-[13px] font-medium text-ink">
-                  {t.count}
+                  <CountUp to={t.count} delayMs={150 + i * 80} durationMs={650} />
                 </span>
               </li>
             )
@@ -123,12 +130,13 @@ function TopTable({ topics }: { topics: TopicCount[] }) {
         <span className="w-[70px] text-right">Sentiment</span>
         <span className="w-[46px] text-right">Кол-во</span>
       </div>
-      {topics.map((t) => {
+      {topics.map((t, i) => {
         const positive = t.avg_sentiment >= 0
         return (
           <div
             key={t.topic}
-            className="flex items-center border-t border-line px-3.5 py-3"
+            className="flex animate-fade-rise items-center border-t border-line px-3.5 py-3"
+            style={{ animationDelay: `${i * 50}ms` }}
           >
             <span className="flex-1 truncate text-sm font-medium text-ink">{t.topic}</span>
             <span
@@ -137,11 +145,16 @@ function TopTable({ topics }: { topics: TopicCount[] }) {
                 positive ? 'text-success' : 'text-danger',
               )}
             >
-              {positive ? '+' : ''}
-              {t.avg_sentiment.toFixed(2)}
+              <CountUp
+                to={t.avg_sentiment}
+                durationMs={650}
+                delayMs={100 + i * 50}
+                fractionDigits={2}
+                prefix={positive ? '+' : ''}
+              />
             </span>
             <span className="w-[46px] text-right font-mono text-[13px] font-medium text-muted">
-              {t.count}
+              <CountUp to={t.count} delayMs={120 + i * 50} durationMs={600} />
             </span>
           </div>
         )

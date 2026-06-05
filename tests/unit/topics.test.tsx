@@ -58,8 +58,8 @@ describe('TopicsRoute', () => {
       expect(screen.getAllByText('Скорость подачи').length).toBeGreaterThanOrEqual(2),
     )
     expect(screen.getByText(/Топ-5 · позитив/)).toBeInTheDocument()
-    // delta with + sign (table)
-    expect(screen.getByText('+0.70')).toBeInTheDocument()
+    // delta with + sign (table) — CountUp formats via ru-RU locale (comma).
+    expect(screen.getByText('+0,70')).toBeInTheDocument()
   })
 
   it('switching to «Негативные» triggers a fetch with sentiment=negative', async () => {
