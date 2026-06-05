@@ -60,24 +60,21 @@ export function createApiClient(options: CreateApiClientOptions = {}): AxiosInst
 }
 
 function isApiError(value: unknown): value is ApiError {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'status' in value &&
-    'message' in value &&
-    typeof (value as ApiError).status === 'number' &&
-    typeof (value as ApiError).message === 'string'
-  )
+  // ApiError is a PLAIN object — anything that's also an Error / AxiosError
+  // (those carry their own .status/.message shortcuts in modern axios) is
+  // handled by the dedicated branches below.
+  if (typeof value !== 'object' || value === null) return false
+  if (value instanceof Error) return false
+  if (axios.isAxiosError(value)) return false
+  const v = value as Partial<ApiError>
+  return typeof v.status === 'number' && typeof v.message === 'string'
 }
 
 export function toApiError(error: unknown): ApiError {
-  // The response interceptor already wraps every axios failure as
-  // ApiError before rejecting, so by the time it bubbles up to a route
-  // handler the "error" is no longer an AxiosError or Error instance —
-  // it's a plain ApiError object. Detect that shape and forward it
-  // unchanged; otherwise we'd lose the real message and degrade to
-  // "Unknown error" on screen.
-  if (isApiError(error)) return error
+  // Native axios / Error cases first — modern AxiosError exposes
+  // `.status` and `.message` as top-level properties, so the "already
+  // an ApiError" branch has to come AFTER these to avoid swallowing
+  // them.
   if (axios.isAxiosError(error)) {
     const status = error.response?.status ?? 0
     const data = error.response?.data
@@ -97,6 +94,11 @@ export function toApiError(error: unknown): ApiError {
   if (error instanceof Error) {
     return { status: 0, message: error.message }
   }
+  // The response interceptor wraps axios failures as ApiError before
+  // rejecting, so by the time it bubbles up to a route handler the
+  // "error" is a plain ApiError object. Forward it unchanged — otherwise
+  // we'd lose the real message and degrade to "Unknown error" on screen.
+  if (isApiError(error)) return error
   return { status: 0, message: 'Unknown error' }
 }
 
