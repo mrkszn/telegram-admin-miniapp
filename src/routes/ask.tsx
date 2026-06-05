@@ -1,12 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { AppShell } from '@/components/layout/AppShell'
 import { ChatWidget, type ChatMessage, type ChatWidgetHandle } from '@/components/chat/ChatWidget'
 import { ChartFromText } from '@/components/chat/ChartFromText'
 import { ErrorState } from '@/components/feedback/ErrorState'
-import { askAdmin } from '@/lib/api/admin'
-import { bootstrapAuth } from '@/lib/telegram/auth'
-import { toApiError } from '@/lib/api/client'
-import type { AskHistoryItem, AskResponse } from '@/lib/api/types'
+import { useChatStore, type StoredChatMessage } from '@/lib/state/chat-store'
 import { ADMIN_NAV } from './nav'
 
 const SUGGESTED_PROMPTS = [
@@ -16,53 +13,40 @@ const SUGGESTED_PROMPTS = [
   'Найди жалобы на скорость',
 ]
 
-/** How many prior messages are passed back to the agent as context. */
-const HISTORY_WINDOW = 6
-
-function nextId(): string {
-  // crypto.randomUUID is available in jsdom and browsers; safe fallback.
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID()
+/**
+ * Hydrate a stored message (just strings, lives in localStorage) into a
+ * ChatWidget message (React tree, ChartFromText for the chart slot).
+ */
+function hydrate(stored: StoredChatMessage): ChatMessage {
+  return {
+    id: stored.id,
+    role: stored.role,
+    content: stored.content,
+    chart: stored.chartText ? <ChartFromText text={stored.chartText} /> : undefined,
   }
-  return `m-${Math.random().toString(36).slice(2, 10)}`
 }
 
 export function AskRoute() {
-  const [messages, setMessages] = useState<ChatMessage[]>([])
-  const [error, setError] = useState<string | null>(null)
-  const [isBusy, setIsBusy] = useState(false)
+  const messages = useChatStore((s) => s.messages)
+  const isBusy = useChatStore((s) => s.isBusy)
+  const error = useChatStore((s) => s.error)
+  const send = useChatStore((s) => s.send)
+  const clearError = useChatStore((s) => s.clearError)
   const chatRef = useRef<ChatWidgetHandle>(null)
 
   useEffect(() => {
     chatRef.current?.scrollToBottom()
   }, [messages, isBusy])
 
-  const send = useCallback(
-    async (question: string) => {
-      const userMsg: ChatMessage = { id: nextId(), role: 'user', content: question }
-      const history = buildHistory([...messages, userMsg])
-      setMessages((prev) => [...prev, userMsg])
-      setIsBusy(true)
-      setError(null)
-      try {
-        const res = await submitAskWithRetry(question, history)
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: nextId(),
-            role: 'agent',
-            content: res.answer_text,
-            chart: res.chart_text ? <ChartFromText text={res.chart_text} /> : undefined,
-          },
-        ])
-      } catch (err) {
-        const apiErr = toApiError(err)
-        setError(apiErr.message || 'Не удалось получить ответ.')
-      } finally {
-        setIsBusy(false)
-      }
+  const handleSubmit = useCallback(
+    (question: string) => {
+      // send() is fire-and-forget from the UI's POV — the store flips
+      // busy/messages synchronously, the agent reply lands later even if
+      // we've navigated away. Float the promise so React's linter is happy
+      // without blocking the input.
+      void send(question)
     },
-    [messages],
+    [send],
   )
 
   return (
@@ -74,14 +58,14 @@ export function AskRoute() {
       <div className="flex h-[calc(100vh-44px-56px)] flex-col">
         {error ? (
           <div className="px-1 pt-3">
-            <ErrorState message={error} />
+            <ErrorState message={error} onRetry={clearError} />
           </div>
         ) : null}
         <ChatWidget
           ref={chatRef}
           className="flex-1"
-          messages={messages}
-          onSubmit={(text) => void send(text)}
+          messages={messages.map(hydrate)}
+          onSubmit={handleSubmit}
           isBusy={isBusy}
           placeholder="Спросите про метрики или клиентов…"
           emptyState={<SuggestedPrompts onPick={(p) => void send(p)} />}
@@ -101,6 +85,7 @@ function SuggestedPrompts({ onPick }: { onPick(p: string): void }) {
       </p>
       <p className="text-sm leading-relaxed text-muted">
         Агент сходит в метрики, топики и клиентов и вернёт сводку.
+        Можно уйти на другую вкладку, пока он считает — ответ дождётся вас здесь.
       </p>
       <div className="flex flex-wrap justify-center gap-2 pt-2">
         {SUGGESTED_PROMPTS.map((p) => (
@@ -116,40 +101,4 @@ function SuggestedPrompts({ onPick }: { onPick(p: string): void }) {
       </div>
     </div>
   )
-}
-
-/**
- * Compose the trailing history window into the role/content pairs the
- * backend expects. The current user message is included; the agent
- * reply for *this* turn is not yet present.
- */
-function buildHistory(messages: ChatMessage[]): AskHistoryItem[] {
-  return messages
-    .filter((m) => m.role === 'user' || m.role === 'agent')
-    .map((m) => ({
-      role: m.role === 'user' ? ('user' as const) : ('assistant' as const),
-      content: typeof m.content === 'string' ? m.content : '',
-    }))
-    .slice(-HISTORY_WINDOW)
-}
-
-/**
- * Submit, and if the backend returns 401 (session expired), transparently
- * re-bootstrap auth and retry once. The user shouldn't notice.
- */
-async function submitAskWithRetry(
-  question: string,
-  history: AskHistoryItem[],
-): Promise<AskResponse> {
-  try {
-    return await askAdmin({ question, history })
-  } catch (err) {
-    const apiErr = toApiError(err)
-    if (apiErr.status !== 401) throw err
-    await bootstrapAuth({
-      apiBaseUrl: import.meta.env.VITE_API_BASE_URL ?? '',
-      authEndpoint: import.meta.env.VITE_AUTH_ENDPOINT ?? '/admin/auth',
-    })
-    return await askAdmin({ question, history })
-  }
 }

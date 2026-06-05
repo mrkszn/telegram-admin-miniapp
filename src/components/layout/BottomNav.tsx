@@ -1,6 +1,7 @@
 import type { ComponentType, SVGProps } from 'react'
 import { NavLink } from 'react-router-dom'
 import { cn } from '@/lib/utils'
+import { useChatStore } from '@/lib/state/chat-store'
 
 export interface NavItem {
   to: string
@@ -16,6 +17,7 @@ interface BottomNavProps {
 }
 
 export function BottomNav({ items, className }: BottomNavProps) {
+  const chatBusy = useChatStore((s) => s.isBusy)
   return (
     <nav
       className={cn(
@@ -24,30 +26,48 @@ export function BottomNav({ items, className }: BottomNavProps) {
       )}
       aria-label="Основная навигация"
     >
-      {items.map((item) => (
-        <NavLink
-          key={item.to}
-          to={item.to}
-          end={item.end}
-          className={({ isActive }) =>
-            cn(
-              'flex flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition-colors',
-              isActive ? 'text-brand' : 'text-muted hover:text-ink',
-            )
-          }
-        >
-          {({ isActive }) => (
-            <>
-              <item.icon
-                className="h-5 w-5"
-                strokeWidth={isActive ? 2 : 1.75}
-                aria-hidden="true"
-              />
-              <span className="leading-none">{item.label}</span>
-            </>
-          )}
-        </NavLink>
-      ))}
+      {items.map((item) => {
+        // Currently only the chat path is "background-busy" aware: when the
+        // user fired off a question and navigated away, we surface a small
+        // pulsing brand dot on top of the Чат tab so they remember it's
+        // still cooking.
+        const showBusyDot = chatBusy && item.to === '/ask'
+        return (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            end={item.end}
+            className={({ isActive }) =>
+              cn(
+                'relative flex flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition-colors',
+                isActive ? 'text-brand' : 'text-muted hover:text-ink',
+              )
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <div className="relative">
+                  <item.icon
+                    className="h-5 w-5"
+                    strokeWidth={isActive ? 2 : 1.75}
+                    aria-hidden="true"
+                  />
+                  {showBusyDot ? (
+                    <span
+                      aria-label="Агент готовит ответ"
+                      className="absolute -right-0.5 -top-0.5 inline-flex h-2 w-2"
+                    >
+                      <span className="animate-brand-pulse absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-brand" />
+                    </span>
+                  ) : null}
+                </div>
+                <span className="leading-none">{item.label}</span>
+              </>
+            )}
+          </NavLink>
+        )
+      })}
     </nav>
   )
 }
