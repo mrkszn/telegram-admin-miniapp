@@ -11,12 +11,17 @@ const config: Config = {
     // theme they become near-invisible against the surface.
     './node_modules/@tremor/**/*.{js,mjs,ts}',
   ],
-  // Safelist every shade Tremor may pick from our palette. Cheap insurance
-  // against future renames / new chart colours.
+  // Safelist every shade Tremor may pick from our palette + the Tremor
+  // design tokens themselves (some are emitted only at runtime). Cheap
+  // insurance against future renames / new chart colours.
   safelist: [
     {
       pattern:
         /(bg|fill|stroke|text|border|ring)-(violet|cyan|amber|rose|emerald|indigo|sky|lime|orange|pink|teal)-(300|400|500|600)/,
+    },
+    {
+      pattern:
+        /(bg|text|border|ring|shadow|fill|stroke)-(tremor|dark-tremor)-(brand|background|border|ring|content)(-(faint|muted|subtle|DEFAULT|emphasis|inverted|strong))?/,
     },
   ],
   darkMode: ['class', '[data-theme="dark"]'],
@@ -90,14 +95,77 @@ const config: Config = {
           DEFAULT: 'var(--surface)',
           foreground: 'var(--ink)',
         },
-        // tremor minimal aliases
-        'tremor-brand': {
-          DEFAULT: 'var(--primary)',
-          muted: 'var(--primary-soft)',
-          subtle: 'var(--primary-tint)',
-          emphasis: 'var(--primary-deep)',
-          inverted: 'var(--primary-on)',
+        // ── Tremor design tokens — full set so axis labels, gridlines,
+        // tooltip text and tooltip background all follow the active theme.
+        // Previously only `tremor-brand` was defined and the rest fell
+        // through to Tremor defaults (gray-700 on white card) — on the
+        // InsightFlow dark palette that resolved to near-black text on
+        // near-black bg ("text не читается").
+        tremor: {
+          brand: {
+            faint: 'var(--primary-tint)',
+            muted: 'var(--primary-soft)',
+            subtle: 'var(--primary)',
+            DEFAULT: 'var(--primary)',
+            emphasis: 'var(--primary-deep)',
+            inverted: 'var(--primary-on)',
+          },
+          background: {
+            muted: 'var(--bg-soft)',
+            subtle: 'var(--surface-2)',
+            DEFAULT: 'var(--surface)',
+            emphasis: 'var(--ink)',
+          },
+          border: { DEFAULT: 'var(--line)' },
+          ring: { DEFAULT: 'var(--line-strong)' },
+          content: {
+            subtle: 'var(--muted-2)',
+            DEFAULT: 'var(--muted)',
+            emphasis: 'var(--ink-2)',
+            strong: 'var(--ink)',
+            inverted: 'var(--primary-on)',
+          },
         },
+        'dark-tremor': {
+          brand: {
+            faint: 'var(--primary-tint)',
+            muted: 'var(--primary-soft)',
+            subtle: 'var(--primary)',
+            DEFAULT: 'var(--primary)',
+            emphasis: 'var(--primary-deep)',
+            inverted: 'var(--primary-on)',
+          },
+          background: {
+            muted: 'var(--bg-soft)',
+            subtle: 'var(--surface-2)',
+            DEFAULT: 'var(--surface)',
+            emphasis: 'var(--ink)',
+          },
+          border: { DEFAULT: 'var(--line)' },
+          ring: { DEFAULT: 'var(--line-strong)' },
+          content: {
+            subtle: 'var(--muted-2)',
+            DEFAULT: 'var(--muted)',
+            emphasis: 'var(--ink-2)',
+            strong: 'var(--ink)',
+            inverted: 'var(--primary-on)',
+          },
+        },
+      },
+      boxShadow: {
+        // Tremor consumes its own shadow tokens for tooltip cards. Point
+        // them at standard shadow + our line colour so tooltips stay on
+        // brand on both themes (default would be hard-coded light).
+        'tremor-input': '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+        'tremor-card':
+          '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
+        'tremor-dropdown':
+          '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+        'dark-tremor-input': '0 1px 2px 0 rgb(0 0 0 / 0.4)',
+        'dark-tremor-card':
+          '0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4)',
+        'dark-tremor-dropdown':
+          '0 6px 10px -2px rgb(0 0 0 / 0.4), 0 4px 6px -2px rgb(0 0 0 / 0.4)',
       },
       fontFamily: {
         sans: ['var(--font-sans)'],
