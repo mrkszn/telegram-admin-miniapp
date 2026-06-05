@@ -46,26 +46,51 @@ const PARAM_TO_TOKEN: Partial<Record<keyof TelegramThemeParams, string[]>> = {
   destructive_text_color: ['--danger'],
 }
 
+/** All token vars Telegram may have written inline — used for cleanup. */
+const ALL_TOKEN_OVERRIDES = Array.from(
+  new Set(Object.values(PARAM_TO_TOKEN).flat()),
+)
+
 export function applyTelegramTheme(
   params: TelegramThemeParams | undefined,
   scheme: ColorScheme | undefined,
-  root: HTMLElement = document.documentElement,
+  options: { overrideTokens?: boolean; root?: HTMLElement } = {},
 ): ApplyResult {
+  const root = options.root ?? document.documentElement
+  const overrideTokens = options.overrideTokens ?? true
   const applied: Record<string, string> = {}
+
   if (scheme) {
     root.setAttribute('data-theme', scheme)
   }
+
+  // User picked a forced theme (light/dark) — drop any prior inline token
+  // overrides so the CSS rules from `[data-theme='...']` in tokens.css can
+  // actually win. Without this step the previous Telegram-supplied values
+  // stay on root.style and beat the class rules by specificity → cycling
+  // the toggle changes the data-theme attribute but the visible palette
+  // doesn't move.
+  if (!overrideTokens) {
+    for (const tok of ALL_TOKEN_OVERRIDES) {
+      root.style.removeProperty(tok)
+    }
+  }
+
   if (!params) {
     return { scheme: scheme ?? 'light', applied }
   }
+
   for (const [key, value] of Object.entries(params)) {
     if (!value) continue
     const paramKey = key as keyof TelegramThemeParams
     const tgVar = PARAM_TO_TG_VAR[paramKey]
     if (tgVar) {
+      // Always expose `--tg-theme-*` so consumers that explicitly opt-in
+      // can read Telegram chrome colors even when we're in forced mode.
       root.style.setProperty(tgVar, value)
       applied[tgVar] = value
     }
+    if (!overrideTokens) continue
     const tokens = PARAM_TO_TOKEN[paramKey]
     if (tokens) {
       for (const t of tokens) {

@@ -20,15 +20,18 @@ export function ThemeProvider({ children, forceScheme }: ThemeProviderProps) {
     const tg = readyTelegram()
     const apply = (upstream: 'light' | 'dark' | undefined) => {
       const scheme = forceScheme ?? resolve(upstream)
-      applyTelegramTheme(tg?.themeParams, scheme)
+      // Auto = follow Telegram → let it override our tokens.
+      // Forced light/dark = ignore Telegram colours → pure tokens.css scheme.
+      const overrideTokens = preference === 'auto' && !forceScheme
+      applyTelegramTheme(tg?.themeParams, scheme, { overrideTokens })
     }
     apply(tg?.colorScheme)
     const unsubscribe = subscribeTelegramTheme(tg, (current) => apply(current.colorScheme))
     setReady(true)
     return unsubscribe
-    // `resolve` is a useCallback whose identity changes only when the user
-    // flips the preference — that's exactly when we want to re-apply.
-  }, [forceScheme, resolve])
+    // `resolve` identity follows the preference; we also depend on
+    // `preference` directly so the override-flag re-evaluates.
+  }, [forceScheme, preference, resolve])
 
   return (
     <div data-theme-ready={ready ? 'true' : 'false'} data-theme-pref={preference}>

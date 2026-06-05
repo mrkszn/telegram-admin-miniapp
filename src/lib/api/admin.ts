@@ -15,6 +15,7 @@ import type {
   ClientProfileResponse,
   MetricsResponse,
   OverviewResponse,
+  QuestionsResponse,
   SemanticSearchRequest,
   SemanticSearchResponse,
   TopicSentiment,
@@ -29,6 +30,16 @@ export interface DateRange {
 
 function client(override?: AxiosInstance): AxiosInstance {
   return override ?? api()
+}
+
+export async function fetchQuestions(
+  override?: AxiosInstance,
+  activeOnly = true,
+): Promise<QuestionsResponse> {
+  const { data } = await client(override).get<QuestionsResponse>('/admin/questions', {
+    params: { active_only: activeOnly },
+  })
+  return data
 }
 
 export async function fetchOverview(

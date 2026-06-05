@@ -14,18 +14,42 @@ import { ErrorState } from '@/components/feedback/ErrorState'
 import { Skeleton } from '@/components/feedback/Skeleton'
 import { useApi } from '@/lib/hooks/useApi'
 import { resolveRange, DEFAULT_PRESET, type DateRangePreset } from '@/lib/date-range'
-import { fetchMetrics } from '@/lib/api/admin'
-import { DEFAULT_METRIC_KEY, METRIC_KEYS, labelFor } from '@/lib/metric-keys'
+import { fetchMetrics, fetchQuestions } from '@/lib/api/admin'
+import {
+  DEFAULT_METRIC_KEY,
+  METRIC_KEYS as STATIC_METRIC_KEYS,
+  labelFor as staticLabelFor,
+  type MetricKeyOption,
+} from '@/lib/metric-keys'
 import { cn } from '@/lib/utils'
-import type { MetricsResponse } from '@/lib/api/types'
+import type { MetricsResponse, QuestionsResponse } from '@/lib/api/types'
 import { ADMIN_NAV } from './nav'
 
 type GroupBy = 'day' | 'week'
 
+function useMetricKeyOptions(): MetricKeyOption[] {
+  // Pull questions from backend on mount; fall back to the static seed list
+  // if the call fails. Filters out 'text' questions — they're not chartable
+  // and only confuse the picker.
+  const { data } = useApi<QuestionsResponse>('questions|active', () => fetchQuestions())
+  if (!data) return STATIC_METRIC_KEYS
+  const live = data.questions
+    .filter((q) => q.expected_type !== 'text' && q.metric_key.trim())
+    .map((q) => ({ value: q.metric_key, label: q.text || q.metric_key }))
+  return live.length > 0 ? live : STATIC_METRIC_KEYS
+}
+
 export function MetricsRoute() {
-  const [metricKey, setMetricKey] = useState<string>(DEFAULT_METRIC_KEY)
+  const options = useMetricKeyOptions()
+  const fallbackKey = options[0]?.value ?? DEFAULT_METRIC_KEY
+  const [metricKey, setMetricKey] = useState<string>(fallbackKey)
   const [preset, setPreset] = useState<DateRangePreset>(DEFAULT_PRESET)
   const [groupBy, setGroupBy] = useState<GroupBy>('day')
+
+  // If the picker had a stale key not in the live list, swap silently.
+  if (metricKey !== fallbackKey && !options.find((o) => o.value === metricKey)) {
+    setMetricKey(fallbackKey)
+  }
 
   const range = useMemo(() => resolveRange(preset), [preset])
   const key = `metrics|${metricKey}|${range.date_from}|${range.date_to}|${groupBy}`
@@ -39,7 +63,7 @@ export function MetricsRoute() {
     }),
   )
 
-  const label = labelFor(metricKey)
+  const label = labelFor(metricKey, options)
   const isNumber = data?.expected_type === 'number'
 
   return (
@@ -47,6 +71,7 @@ export function MetricsRoute() {
       <div className="flex flex-col gap-4">
         <FilterBar
           metricKey={metricKey}
+          options={options}
           onMetricKeyChange={setMetricKey}
           preset={preset}
           onPresetChange={setPreset}
@@ -67,10 +92,15 @@ export function MetricsRoute() {
   )
 }
 
+function labelFor(key: string, options: MetricKeyOption[]): string {
+  return options.find((m) => m.value === key)?.label ?? staticLabelFor(key)
+}
+
 /* ── filter bar ─────────────────────────────────────────── */
 
 interface FilterBarProps {
   metricKey: string
+  options: MetricKeyOption[]
   onMetricKeyChange(next: string): void
   preset: DateRangePreset
   onPresetChange(next: DateRangePreset): void
@@ -81,6 +111,7 @@ interface FilterBarProps {
 
 function FilterBar({
   metricKey,
+  options,
   onMetricKeyChange,
   preset,
   onPresetChange,
@@ -88,6 +119,7 @@ function FilterBar({
   onGroupByChange,
   showGroupBy,
 }: FilterBarProps) {
+  const currentLabel = labelFor(metricKey, options)
   return (
     <div className="flex flex-wrap items-center gap-2">
       <DropdownMenu>
@@ -95,14 +127,14 @@ function FilterBar({
           <button
             type="button"
             aria-label="Выбрать метрику"
-            className="inline-flex h-8 items-center gap-1.5 rounded-full border border-line bg-surface px-3 text-xs font-medium text-ink"
+            className="inline-flex h-8 max-w-[200px] items-center gap-1.5 truncate rounded-full border border-line bg-surface px-3 text-xs font-medium text-ink"
           >
-            {labelFor(metricKey)}
-            <ChevronDown className="h-3.5 w-3.5 text-muted" strokeWidth={1.75} aria-hidden="true" />
+            <span className="truncate">{currentLabel}</span>
+            <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted" strokeWidth={1.75} aria-hidden="true" />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
-          {METRIC_KEYS.map((opt) => (
+        <DropdownMenuContent align="start" className="max-w-[260px]">
+          {options.map((opt) => (
             <DropdownMenuItem
               key={opt.value}
               onSelect={() => onMetricKeyChange(opt.value)}

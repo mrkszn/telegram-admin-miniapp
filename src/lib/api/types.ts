@@ -102,6 +102,18 @@ export interface ClientProfileResponse {
   top_topics: TopicCount[]
 }
 
+// --- questions ----------------------------------------------
+export interface Question {
+  id: string
+  text: string
+  metric_key: string
+  expected_type: MetricType
+  enum_values: string[] | null
+}
+export interface QuestionsResponse {
+  questions: Question[]
+}
+
 // --- ask (admin chat) ---------------------------------------
 export interface AskHistoryItem {
   role: 'user' | 'assistant'
