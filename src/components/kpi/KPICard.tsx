@@ -45,6 +45,9 @@ export function KPICard({
         'flex min-w-0 flex-col gap-2 overflow-hidden rounded-card border border-line bg-surface p-4',
         className,
       )}
+      // container-type makes 1cqi == 1% of THIS card's inline-size —
+      // lets the .serif-num value auto-fit its content (see span below).
+      style={{ containerType: 'inline-size' }}
     >
       <div className="flex items-center justify-between gap-2">
         <span className="truncate text-xs font-medium uppercase tracking-wide text-muted">
@@ -63,10 +66,21 @@ export function KPICard({
         ) : null}
       </div>
       <div
-        className="serif-num break-words text-[length:var(--kpi-size)] leading-tight text-ink"
-        // Long Russian sentiment words («нейтрально») used to overflow the
-        // 2-col grid cell. break-words + leading-tight + overflow-hidden on
-        // the parent let them wrap to a second line gracefully.
+        // No mid-word break, no layout change, no manual font reduction —
+        // we use container queries (1cqw = 1% of the parent card width)
+        // so the font-size auto-fits whatever text comes in. Short values
+        // like «30» or «-0.17» stay at the design's --kpi-size (30 px),
+        // long Russian words like «нейтрально» quietly shrink to fit on
+        // a single line without forcing the «нейтраль/но» hyphenation
+        // that ‎the previous build showed.
+        className="serif-num whitespace-nowrap leading-tight text-ink"
+        style={{
+          // clamp(min, dynamic, max): on a ~165 px card the dynamic term
+          // gives ~24 px (small enough for «нейтрально» to fit one line);
+          // on roomier cards it climbs to --kpi-size (30 px) for «30 %» /
+          // «-0.17» etc.
+          fontSize: 'clamp(1.125rem, calc(12cqi + 0.25rem), var(--kpi-size))',
+        }}
       >
         {value}
       </div>

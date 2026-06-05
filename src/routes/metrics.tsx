@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { LineChartCard } from '@/components/charts/LineChartCard'
 import { BarChartCard } from '@/components/charts/BarChartCard'
+import { DonutChartCard } from '@/components/charts/DonutChartCard'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { Skeleton } from '@/components/feedback/Skeleton'
 import { useApi } from '@/lib/hooks/useApi'
@@ -283,31 +284,51 @@ function NumberView({ data, label }: { data: MetricsResponse; label: string }) {
   )
 }
 
+type EnumChartKind = 'bar' | 'donut'
+
 function EnumView({ data, label }: { data: MetricsResponse; label: string }) {
+  const [chartKind, setChartKind] = useState<EnumChartKind>('bar')
   const dist = [...(data.distribution ?? [])].sort((a, b) => b.count - a.count)
   const max = dist[0]?.count ?? 0
   const total = data.total ?? dist.reduce((s, d) => s + d.count, 0)
   const unknown = data.unknown ?? 0
   const chartData = dist.map((d) => ({ value: d.value, count: d.count }))
 
+  const sharedTitle = (
+    <span className="flex items-baseline gap-2">
+      <span className="serif-num text-3xl leading-none">
+        {total.toLocaleString('ru-RU')}
+      </span>
+      <span className="font-mono text-xs text-muted">значений</span>
+    </span>
+  )
+  const sharedSubtitle = `Распределение по метрике «${label}»`
+
   return (
     <div className="flex flex-col gap-4">
-      <BarChartCard
-        title={
-          <span className="flex items-baseline gap-2">
-            <span className="serif-num text-3xl leading-none">
-              {total.toLocaleString('ru-RU')}
-            </span>
-            <span className="font-mono text-xs text-muted">значений</span>
-          </span>
-        }
-        subtitle={`Распределение по метрике «${label}»`}
-        data={chartData}
-        index="value"
-        categories={['count']}
-        colors={['violet']}
-        height={180}
-      />
+      <EnumChartKindToggle value={chartKind} onChange={setChartKind} />
+
+      {chartKind === 'bar' ? (
+        <BarChartCard
+          title={sharedTitle}
+          subtitle={sharedSubtitle}
+          data={chartData}
+          index="value"
+          categories={['count']}
+          colors={['violet']}
+          height={180}
+        />
+      ) : (
+        <DonutChartCard
+          title={sharedTitle}
+          subtitle={sharedSubtitle}
+          data={chartData}
+          index="value"
+          category="count"
+          centerCaption="всего"
+          height={210}
+        />
+      )}
 
       <div className="flex items-center justify-between gap-3 text-sm text-muted">
         <span>
@@ -355,6 +376,44 @@ function EnumView({ data, label }: { data: MetricsResponse; label: string }) {
           ))}
         </div>
       </section>
+    </div>
+  )
+}
+
+function EnumChartKindToggle({
+  value,
+  onChange,
+}: {
+  value: EnumChartKind
+  onChange(next: EnumChartKind): void
+}) {
+  const options: Array<{ value: EnumChartKind; label: string }> = [
+    { value: 'bar', label: 'Столбцы' },
+    { value: 'donut', label: 'Кольцо' },
+  ]
+  return (
+    <div
+      role="group"
+      aria-label="Тип графика"
+      className="inline-flex w-fit rounded-full border border-line bg-surface p-0.5"
+    >
+      {options.map((o) => {
+        const active = o.value === value
+        return (
+          <button
+            key={o.value}
+            type="button"
+            aria-pressed={active}
+            onClick={() => onChange(o.value)}
+            className={cn(
+              'h-7 rounded-full px-3 text-[12px] font-medium transition-colors',
+              active ? 'bg-brand text-brand-on' : 'text-muted',
+            )}
+          >
+            {o.label}
+          </button>
+        )
+      })}
     </div>
   )
 }
