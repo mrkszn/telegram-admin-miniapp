@@ -1,4 +1,6 @@
 import { cn } from '@/lib/utils'
+import { AnimatedBar } from '@/components/feedback/AnimatedBar'
+import { CountUp } from '@/components/feedback/CountUp'
 import type { TopicCount } from '@/lib/api/types'
 
 interface TopTopicsCardProps {
@@ -11,6 +13,11 @@ interface TopTopicsCardProps {
 }
 
 const dotTone: Record<TopTopicsCardProps['tone'], string> = {
+  positive: 'bg-success',
+  negative: 'bg-danger',
+}
+
+const barTone: Record<TopTopicsCardProps['tone'], string> = {
   positive: 'bg-success',
   negative: 'bg-danger',
 }
@@ -28,6 +35,7 @@ export function TopTopicsCard({
   emptyHint = 'Нет данных',
 }: TopTopicsCardProps) {
   const items = topics.slice(0, limit)
+  const max = items[0]?.count ?? 0
   return (
     <div className="card-shell flex flex-col gap-2.5">
       <div className="flex items-center justify-between">
@@ -39,11 +47,26 @@ export function TopTopicsCard({
       {items.length === 0 ? (
         <span className="text-sm text-muted">{emptyHint}</span>
       ) : (
-        <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
-          {items.map((t) => (
-            <li key={t.topic} className="flex items-baseline gap-2">
-              <span className="flex-1 truncate text-sm text-ink">{t.topic}</span>
-              <span className={cn('serif-num text-base', countTone[tone])}>{t.count}</span>
+        <ul className="m-0 flex list-none flex-col gap-2 p-0">
+          {items.map((t, i) => (
+            <li
+              key={`${tone}|${t.topic}`}
+              className="flex animate-fade-rise flex-col gap-1"
+              style={{ animationDelay: `${i * 60}ms` }}
+            >
+              <div className="flex items-baseline gap-2">
+                <span className="flex-1 truncate text-[13px] text-ink">{t.topic}</span>
+                <span className={cn('serif-num text-base', countTone[tone])}>
+                  <CountUp to={t.count} delayMs={140 + i * 70} durationMs={650} />
+                </span>
+              </div>
+              <AnimatedBar
+                pct={max > 0 ? (t.count / max) * 100 : 0}
+                className={barTone[tone]}
+                heightClassName="h-1"
+                delayMs={120 + i * 80}
+                label={`${t.topic}: ${t.count}`}
+              />
             </li>
           ))}
         </ul>

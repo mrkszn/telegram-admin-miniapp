@@ -109,7 +109,11 @@ export function ChartFromText({ text }: Props) {
         index="label"
         categories={['value']}
         colors={['violet']}
-        height={Math.min(220, 40 + data.length * 28)}
+        // Vertical layout puts category names on the y-axis where each one
+        // shows in full — horizontal layout was dropping every other Russian
+        // label inside the tight chat bubble width.
+        layout="vertical"
+        height={48 + data.length * 32}
       />
     )
   }
