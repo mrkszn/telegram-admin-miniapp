@@ -7,6 +7,7 @@ import { MetricsRoute } from '@/routes/metrics'
 import { TopicsRoute } from '@/routes/topics'
 import { ClientsRoute } from '@/routes/clients'
 import { AskRoute } from '@/routes/ask'
+import { SettingsRoute } from '@/routes/settings'
 
 const router = createBrowserRouter([
   { path: '/', element: <RootRoute /> },
@@ -15,6 +16,7 @@ const router = createBrowserRouter([
   { path: '/topics', element: <TopicsRoute /> },
   { path: '/clients', element: <ClientsRoute /> },
   { path: '/ask', element: <AskRoute /> },
+  { path: '/settings', element: <SettingsRoute /> },
 ])
 
 export function App() {
