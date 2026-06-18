@@ -8,6 +8,7 @@ import { MetricsRoute } from '@/routes/metrics'
 import { TopicsRoute } from '@/routes/topics'
 import { ClientsRoute } from '@/routes/clients'
 import { AskRoute } from '@/routes/ask'
+import { SessionRoute } from '@/routes/session'
 import { SettingsRoute } from '@/routes/settings'
 
 const router = createBrowserRouter([
@@ -17,6 +18,7 @@ const router = createBrowserRouter([
   { path: '/topics', element: <TopicsRoute /> },
   { path: '/clients', element: <ClientsRoute /> },
   { path: '/ask', element: <AskRoute /> },
+  { path: '/sessions/:id', element: <SessionRoute /> },
   { path: '/settings', element: <SettingsRoute /> },
 ])
 

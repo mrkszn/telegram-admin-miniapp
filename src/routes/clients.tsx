@@ -1,30 +1,36 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Search, X } from 'lucide-react'
 import { BrandSpinner } from '@/components/feedback/BrandSpinner'
-import { CountUp } from '@/components/feedback/CountUp'
 import { AppShell } from '@/components/layout/AppShell'
 import { Input } from '@/components/ui/input'
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from '@/components/ui/sheet'
+import { SegmentedControl } from '@/components/ui/segmented'
 import { ClientAvatar } from '@/components/clients/ClientAvatar'
+import { ClientList } from '@/components/clients/ClientList'
+import { ClientProfileSheet } from '@/components/clients/ClientProfileSheet'
 import { ErrorState } from '@/components/feedback/ErrorState'
+import { useApi } from '@/lib/hooks/useApi'
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
-import { fetchClientProfile, semanticSearch } from '@/lib/api/admin'
+import {
+  fetchClientsByQuery,
+  fetchClientsByTopics,
+  fetchTopics,
+  semanticSearch,
+} from '@/lib/api/admin'
+import { resolveRange } from '@/lib/date-range'
 import { toApiError } from '@/lib/api/client'
 import { cn } from '@/lib/utils'
 import { useT, useLanguage, dateLocale, type TranslationKey } from '@/lib/i18n'
 import type {
   ApiError,
-  ClientProfileResponse,
+  ClientsMatch,
+  ClientsResponse,
   SemanticHit,
   SemanticSearchResponse,
+  TopicsResponse,
 } from '@/lib/api/types'
 import { ADMIN_NAV } from './nav'
+
+type SearchMode = 'semantic' | 'name' | 'topics'
 
 const SUGGESTION_KEYS: TranslationKey[] = [
   'clients.suggestion.1',
@@ -35,15 +41,54 @@ const SUGGESTION_KEYS: TranslationKey[] = [
 
 export function ClientsRoute() {
   const t = useT()
+  const [mode, setMode] = useState<SearchMode>('semantic')
+  const [openId, setOpenId] = useState<number | null>(null)
+
+  const modeOptions: { value: SearchMode; label: string }[] = [
+    { value: 'semantic', label: t('clients.mode.semantic') },
+    { value: 'name', label: t('clients.mode.name') },
+    { value: 'topics', label: t('clients.mode.topics') },
+  ]
+
+  return (
+    <AppShell title={t('title.clients')} navItems={ADMIN_NAV}>
+      <div className="flex flex-col gap-4">
+        <SegmentedControl
+          label={t('clients.mode.aria')}
+          options={modeOptions}
+          value={mode}
+          onChange={(m) => setMode(m)}
+        />
+
+        {mode === 'semantic' ? (
+          <SemanticPanel onPick={setOpenId} />
+        ) : mode === 'name' ? (
+          <NamePanel onPick={setOpenId} />
+        ) : (
+          <TopicsPanel onPick={setOpenId} />
+        )}
+      </div>
+
+      <ClientProfileSheet
+        telegramId={openId}
+        onOpenChange={(open) => {
+          if (!open) setOpenId(null)
+        }}
+      />
+    </AppShell>
+  )
+}
+
+/* ── semantic search (unchanged behaviour) ──────────────── */
+
+function SemanticPanel({ onPick }: { onPick(telegramId: number): void }) {
+  const t = useT()
   const [query, setQuery] = useState('')
   const debounced = useDebouncedValue(query.trim(), 300)
-
   const [hits, setHits] = useState<SemanticHit[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<ApiError | null>(null)
-  const [openId, setOpenId] = useState<number | null>(null)
 
-  /* search effect — fires only when the debounced query is non-empty */
   useEffect(() => {
     let cancelled = false
     if (!debounced) {
@@ -73,41 +118,203 @@ export function ClientsRoute() {
   const onSuggest = useCallback((s: string) => setQuery(s), [])
 
   return (
-    <AppShell title={t('title.clients')} navItems={ADMIN_NAV}>
-      <div className="flex flex-col gap-4">
-        <SearchInput value={query} onChange={setQuery} />
-
-        {!debounced ? (
-          <SuggestionsPanel onPick={onSuggest} />
-        ) : loading ? (
-          <SearchingHint />
-        ) : error ? (
-          <ErrorState onRetry={() => setQuery((q) => q + ' ')} />
-        ) : hits.length === 0 ? (
-          <p className="text-sm text-muted">{t('clients.nothingFound')}</p>
-        ) : (
-          <HitsSection hits={hits} onPick={(id) => setOpenId(id)} />
-        )}
-      </div>
-
-      <ProfileSheet
-        telegramId={openId}
-        onOpenChange={(open) => {
-          if (!open) setOpenId(null)
-        }}
+    <>
+      <SearchField
+        value={query}
+        onChange={setQuery}
+        ariaLabel={t('clients.search.aria')}
+        placeholder={t('clients.search.placeholder')}
       />
-    </AppShell>
+      {!debounced ? (
+        <SuggestionsPanel onPick={onSuggest} />
+      ) : loading ? (
+        <SearchingHint />
+      ) : error ? (
+        <ErrorState onRetry={() => setQuery((q) => q + ' ')} />
+      ) : hits.length === 0 ? (
+        <p className="text-sm text-muted">{t('clients.nothingFound')}</p>
+      ) : (
+        <HitsSection hits={hits} onPick={onPick} />
+      )}
+    </>
   )
 }
 
-/* ── search input ───────────────────────────────────────── */
+/* ── name / id lookup ───────────────────────────────────── */
 
-function SearchInput({
+function NamePanel({ onPick }: { onPick(telegramId: number): void }) {
+  const t = useT()
+  const [query, setQuery] = useState('')
+  const debounced = useDebouncedValue(query.trim(), 300)
+  const active = debounced.length > 0
+
+  const { data, error, isLoading } = useApi<ClientsResponse>(
+    active ? `clients|name|${debounced}` : null,
+    active ? () => fetchClientsByQuery(debounced) : null,
+  )
+
+  return (
+    <>
+      <SearchField
+        value={query}
+        onChange={setQuery}
+        ariaLabel={t('clients.byName.aria')}
+        placeholder={t('clients.byName.placeholder')}
+      />
+      {!active ? (
+        <p className="text-sm leading-relaxed text-muted">{t('clients.byName.hint')}</p>
+      ) : (
+        <ClientResults data={data} error={error} isLoading={isLoading} onPick={onPick} />
+      )}
+    </>
+  )
+}
+
+/* ── topic multi-filter ─────────────────────────────────── */
+
+function TopicsPanel({ onPick }: { onPick(telegramId: number): void }) {
+  const t = useT()
+  const range = useMemo(() => resolveRange('90d'), [])
+  const [selected, setSelected] = useState<string[]>([])
+  const [match, setMatch] = useState<ClientsMatch>('and')
+
+  const { data: topicsData } = useApi<TopicsResponse>('clients|topic-universe', () =>
+    fetchTopics({ date_from: range.date_from, date_to: range.date_to }),
+  )
+  const universe = topicsData?.topics ?? []
+
+  const toggle = useCallback((topic: string) => {
+    setSelected((prev) =>
+      prev.includes(topic) ? prev.filter((x) => x !== topic) : [...prev, topic],
+    )
+  }, [])
+
+  const active = selected.length > 0
+  const sortedKey = [...selected].sort().join('|')
+  const { data, error, isLoading } = useApi<ClientsResponse>(
+    active ? `clients|topics|${match}|${sortedKey}` : null,
+    active ? () => fetchClientsByTopics(selected, match) : null,
+  )
+
+  return (
+    <>
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted">
+            {t('clients.byTopics.title')}
+          </span>
+          <MatchToggle value={match} onChange={setMatch} />
+        </div>
+
+        {universe.length === 0 ? (
+          <p className="text-sm text-muted">{t('common.noData')}</p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {universe.map((tp) => {
+              const on = selected.includes(tp.topic)
+              return (
+                <button
+                  key={tp.topic}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => toggle(tp.topic)}
+                  className={cn(
+                    'whitespace-nowrap rounded-full border px-3 py-1.5 text-[13px] transition-colors',
+                    on
+                      ? 'border-brand bg-brand text-brand-on'
+                      : 'border-line bg-surface text-ink-2 hover:border-line-strong hover:text-ink',
+                  )}
+                >
+                  {tp.topic}
+                </button>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      {!active ? (
+        <p className="text-sm leading-relaxed text-muted">{t('clients.byTopics.hint')}</p>
+      ) : (
+        <ClientResults data={data} error={error} isLoading={isLoading} onPick={onPick} />
+      )}
+    </>
+  )
+}
+
+function MatchToggle({
   value,
   onChange,
 }: {
+  value: ClientsMatch
+  onChange(next: ClientsMatch): void
+}) {
+  const t = useT()
+  const options: { value: ClientsMatch; label: string }[] = [
+    { value: 'and', label: t('clients.match.and') },
+    { value: 'or', label: t('clients.match.or') },
+  ]
+  return (
+    <div
+      role="group"
+      aria-label={t('clients.match.aria')}
+      className="inline-flex rounded-full border border-line bg-surface p-0.5"
+    >
+      {options.map((o) => {
+        const on = o.value === value
+        return (
+          <button
+            key={o.value}
+            type="button"
+            aria-pressed={on}
+            onClick={() => onChange(o.value)}
+            className={cn(
+              'h-6 rounded-full px-2.5 text-[12px] font-medium uppercase transition-colors',
+              on ? 'bg-brand text-brand-on' : 'text-muted',
+            )}
+          >
+            {o.label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+/* ── shared results ─────────────────────────────────────── */
+
+function ClientResults({
+  data,
+  error,
+  isLoading,
+  onPick,
+}: {
+  data: ClientsResponse | null
+  error: ApiError | null
+  isLoading: boolean
+  onPick(telegramId: number): void
+}) {
+  const t = useT()
+  if (error) return <ErrorState />
+  if (isLoading || !data) return <SearchingHint />
+  if (data.clients.length === 0) {
+    return <p className="text-sm text-muted">{t('clients.nothingFound')}</p>
+  }
+  return <ClientList clients={data.clients} onPick={onPick} />
+}
+
+/* ── small building blocks ──────────────────────────────── */
+
+function SearchField({
+  value,
+  onChange,
+  ariaLabel,
+  placeholder,
+}: {
   value: string
   onChange(next: string): void
+  ariaLabel: string
+  placeholder: string
 }) {
   const t = useT()
   return (
@@ -120,8 +327,8 @@ function SearchInput({
       <Input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        aria-label={t('clients.search.aria')}
-        placeholder={t('clients.search.placeholder')}
+        aria-label={ariaLabel}
+        placeholder={placeholder}
         className="h-11 rounded-input pl-9 pr-9 text-base"
       />
       {value ? (
@@ -175,7 +382,7 @@ function SearchingHint() {
   )
 }
 
-/* ── hit list ───────────────────────────────────────────── */
+/* ── semantic hit list ──────────────────────────────────── */
 
 function HitsSection({
   hits,
@@ -235,7 +442,8 @@ function HitCard({ hit, onPick }: { hit: SemanticHit; onPick(): void }) {
         month: 'short',
       })
     : ''
-  const name = hit.client_id != null ? t('clients.client', { id: hit.client_id }) : t('clients.anon')
+  const name =
+    hit.client_id != null ? t('clients.client', { id: hit.client_id }) : t('clients.anon')
   const summary =
     hit.summary_text.length > 110
       ? `${hit.summary_text.slice(0, 110)}…`
@@ -276,321 +484,3 @@ function HitCard({ hit, onPick }: { hit: SemanticHit; onPick(): void }) {
     </button>
   )
 }
-
-/* ── profile sheet ──────────────────────────────────────── */
-
-function ProfileSheet({
-  telegramId,
-  onOpenChange,
-}: {
-  telegramId: number | null
-  onOpenChange(open: boolean): void
-}) {
-  const t = useT()
-  const [profile, setProfile] = useState<ClientProfileResponse | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<ApiError | null>(null)
-
-  useEffect(() => {
-    if (telegramId == null) {
-      setProfile(null)
-      setError(null)
-      return
-    }
-    let cancelled = false
-    setLoading(true)
-    setError(null)
-    fetchClientProfile(telegramId)
-      .then((res) => {
-        if (!cancelled) setProfile(res)
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) setError(toApiError(err))
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [telegramId])
-
-  const open = telegramId != null
-
-  return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="max-h-[88vh] overflow-y-auto rounded-t-sheet">
-        <SheetHeader>
-          <SheetTitle className="sr-only">{t('clients.profile.title')}</SheetTitle>
-          <SheetDescription className="sr-only">
-            {t('clients.profile.description')}
-          </SheetDescription>
-        </SheetHeader>
-        {loading ? (
-          <div className="flex items-center gap-2 py-3 text-sm text-muted">
-            <BrandSpinner size="sm" />
-            <span>{t('clients.profile.loading')}</span>
-          </div>
-        ) : error ? (
-          <ErrorState message={t('clients.profile.loadError')} />
-        ) : profile ? (
-          <ProfileBody profile={profile} />
-        ) : (
-          <p className="py-3 text-sm text-muted">{t('clients.profile.notFound')}</p>
-        )}
-      </SheetContent>
-    </Sheet>
-  )
-}
-
-function ProfileBody({ profile }: { profile: ClientProfileResponse }) {
-  const t = useT()
-  const lang = useLanguage()
-  const sentColor =
-    profile.avg_sentiment == null
-      ? 'text-ink'
-      : profile.avg_sentiment > 0.33
-        ? 'text-success'
-        : profile.avg_sentiment < -0.33
-          ? 'text-danger'
-          : 'text-warning'
-  const last = profile.last_session_at
-    ? new Date(profile.last_session_at).toLocaleDateString(dateLocale(lang), {
-        day: '2-digit',
-        month: 'long',
-      })
-    : '—'
-  const name = profile.name ?? t('clients.client', { id: profile.telegram_id })
-
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-3">
-        <ClientAvatar name={profile.name} telegramId={profile.telegram_id} tone="brand" size={46} />
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-lg font-semibold text-ink">{name}</p>
-          <p className="font-mono text-[12.5px] text-muted-2">
-            telegram #{profile.telegram_id} · {t('clients.profile.lastSession')} {last}
-          </p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-2">
-        <ProfileStat
-          label={t('clients.profile.sessions')}
-          value={<CountUp to={profile.sessions_count} durationMs={900} />}
-        />
-        <ProfileStat
-          label="Sentiment"
-          valueClassName={sentColor}
-          value={
-            profile.avg_sentiment != null ? (
-              <CountUp
-                to={profile.avg_sentiment}
-                durationMs={900}
-                delayMs={120}
-                fractionDigits={2}
-                prefix={profile.avg_sentiment > 0 ? '+' : ''}
-              />
-            ) : (
-              '—'
-            )
-          }
-        />
-      </div>
-
-      {profile.top_topics.length > 0 ? (
-        <section className="flex flex-col gap-2">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">
-            {t('clients.profile.topics')}
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {profile.top_topics.slice(0, 6).map((t, i) => (
-              <span
-                key={t.topic}
-                className="animate-fade-rise rounded-full bg-surface-2 px-2.5 py-1 text-[12px] text-ink-2"
-                style={{ animationDelay: `${200 + i * 60}ms` }}
-              >
-                {t.topic}{' '}
-                <span className="ml-1 font-mono text-muted-2">{t.count}</span>
-              </span>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      {profile.recent_cards.length > 0 ? (
-        <section className="flex flex-col gap-2">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">
-            {t('clients.profile.recentCards')}
-          </p>
-          <div className="flex flex-col gap-2">
-            {profile.recent_cards.slice(0, 3).map((card, i) => (
-              <div
-                key={cardKey(card, i)}
-                className="animate-fade-rise"
-                style={{ animationDelay: `${420 + i * 90}ms` }}
-              >
-                <RecentCardItem card={card} />
-              </div>
-            ))}
-          </div>
-        </section>
-      ) : null}
-    </div>
-  )
-}
-
-function ProfileStat({
-  label,
-  value,
-  valueClassName,
-}: {
-  label: string
-  value: ReactNode
-  valueClassName?: string
-}) {
-  return (
-    <div className="rounded-input bg-surface-2 px-3 py-2.5">
-      <p className="text-[10.5px] font-semibold uppercase tracking-[0.06em] text-muted">{label}</p>
-      <p className={cn('serif-num mt-0.5 text-2xl', valueClassName ?? 'text-ink')}>{value}</p>
-    </div>
-  )
-}
-
-/* ── recent feedback card (was JSON dump) ────────────────── */
-
-interface ParsedCard {
-  sessionId: string | null
-  createdAt: string | null
-  summary: string | null
-  sentiment: string | null
-  topics: string[]
-  extras: Array<[string, string]>
-}
-
-const CARD_PRIMARY_FIELDS = new Set([
-  'session_id',
-  'summary_text',
-  'created_at',
-  'sentiment',
-  'topics',
-  // these are useful but we already show via dedicated chips/sections
-  'embedding',
-  'embedding_id',
-])
-
-function asString(v: unknown): string | null {
-  if (typeof v === 'string') return v
-  if (typeof v === 'number' || typeof v === 'boolean') return String(v)
-  return null
-}
-
-function asStringArray(v: unknown): string[] {
-  if (!Array.isArray(v)) return []
-  return v
-    .map((it) => (typeof it === 'string' ? it : it != null ? String(it) : ''))
-    .filter(Boolean)
-}
-
-function parseCard(raw: Record<string, unknown>): ParsedCard {
-  return {
-    sessionId: asString(raw['session_id']),
-    createdAt: asString(raw['created_at']),
-    summary: asString(raw['summary_text']),
-    sentiment: asString(raw['sentiment']),
-    topics: asStringArray(raw['topics']),
-    extras: Object.entries(raw)
-      .filter(([k, v]) => !CARD_PRIMARY_FIELDS.has(k) && v != null && v !== '')
-      .slice(0, 5)
-      .map(([k, v]) => [k, typeof v === 'string' ? v : JSON.stringify(v)]),
-  }
-}
-
-function cardKey(raw: Record<string, unknown>, fallback: number): string {
-  const id = asString(raw['session_id'])
-  return id ?? `card-${fallback}`
-}
-
-const SENTIMENT_LABEL_KEY: Record<string, TranslationKey> = {
-  positive: 'clients.cardSentiment.positive',
-  neutral: 'clients.cardSentiment.neutral',
-  negative: 'clients.cardSentiment.negative',
-}
-
-const SENTIMENT_CLASS: Record<string, string> = {
-  positive: 'bg-mint/15 text-success',
-  neutral: 'bg-surface-2 text-muted',
-  negative: 'bg-rose/15 text-danger',
-}
-
-function formatCardDate(iso: string | null, locale: string): string | null {
-  if (!iso) return null
-  const dt = new Date(iso)
-  if (Number.isNaN(dt.getTime())) return iso.slice(0, 10)
-  return dt.toLocaleString(locale, {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
-function RecentCardItem({ card }: { card: Record<string, unknown> }) {
-  const t = useT()
-  const lang = useLanguage()
-  const parsed = parseCard(card)
-  const sentiment = parsed.sentiment?.toLowerCase()
-  const date = formatCardDate(parsed.createdAt, dateLocale(lang))
-
-  return (
-    <article className="rounded-card border border-line bg-surface p-3.5">
-      <header className="flex flex-wrap items-center gap-2">
-        {sentiment && SENTIMENT_LABEL_KEY[sentiment] ? (
-          <span
-            className={cn(
-              'inline-flex rounded-tag px-2 py-0.5 text-[11px] font-medium',
-              SENTIMENT_CLASS[sentiment] ?? 'bg-surface-2 text-muted',
-            )}
-          >
-            {t(SENTIMENT_LABEL_KEY[sentiment]!)}
-          </span>
-        ) : null}
-        {date ? <span className="text-[12px] text-muted">{date}</span> : null}
-      </header>
-
-      {parsed.summary ? (
-        <p className="mt-2 whitespace-pre-line text-[14px] leading-[1.5] text-ink">
-          {parsed.summary}
-        </p>
-      ) : (
-        <p className="mt-2 text-[13px] italic text-muted">{t('clients.card.noDescription')}</p>
-      )}
-
-      {parsed.topics.length > 0 ? (
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          {parsed.topics.slice(0, 8).map((t) => (
-            <span
-              key={t}
-              className="rounded-full bg-surface-2 px-2 py-0.5 text-[11px] text-ink-2"
-            >
-              {t}
-            </span>
-          ))}
-        </div>
-      ) : null}
-
-      {parsed.extras.length > 0 ? (
-        <dl className="mt-3 flex flex-col gap-0.5 border-t border-line pt-2 text-[11.5px] text-muted">
-          {parsed.extras.map(([k, v]) => (
-            <div key={k} className="flex gap-2">
-              <dt className="shrink-0 font-mono text-muted-2">{k}</dt>
-              <dd className="min-w-0 flex-1 truncate text-ink-2">{v}</dd>
-            </div>
-          ))}
-        </dl>
-      ) : null}
-    </article>
-  )
-}
-

@@ -1,0 +1,78 @@
+/**
+ * Session timeline route (/sessions/:id) — renders the transcript, the
+ * answers and the summary from GET /admin/sessions/{id}.
+ */
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen } from '@testing-library/react'
+import { MemoryRouter, Routes, Route } from 'react-router-dom'
+import type { SessionDetail } from '@/lib/api/types'
+
+const fetchSessionDetail = vi.fn<(id: string) => Promise<SessionDetail>>()
+
+vi.mock('@/lib/api/admin', () => ({
+  fetchSessionDetail: (id: string) => fetchSessionDetail(id),
+}))
+
+const { SessionRoute } = await import('@/routes/session')
+
+const sample: SessionDetail = {
+  id: 's-1',
+  client_id: 42,
+  client_name: 'Alice Cooper',
+  started_at: '2026-05-30T18:21:00Z',
+  ended_at: '2026-05-30T18:35:00Z',
+  sentiment: 'positive',
+  topics: ['сервіс', 'їжа'],
+  source: 'telegram',
+  summary: 'Клієнт задоволений сервісом.',
+  messages: [
+    { role: 'assistant', content: 'Як вам сьогоднішній візит?', created_at: '2026-05-30T18:21:00Z' },
+    { role: 'user', content: 'Все було чудово!', created_at: '2026-05-30T18:22:00Z' },
+  ],
+  answers: [
+    { question_text: 'Оцініть сервіс', answer_text: 'Відмінно', marked_value: '5' },
+  ],
+  card_summary: { summary_text: 'ok' },
+}
+
+function renderAt(id: string) {
+  return render(
+    <MemoryRouter initialEntries={[`/sessions/${id}`]}>
+      <Routes>
+        <Route path="/sessions/:id" element={<SessionRoute />} />
+      </Routes>
+    </MemoryRouter>,
+  )
+}
+
+beforeEach(() => {
+  fetchSessionDetail.mockReset()
+})
+
+describe('SessionRoute', () => {
+  it('fetches by id and renders summary, answers and transcript', async () => {
+    fetchSessionDetail.mockResolvedValueOnce(sample)
+    renderAt('s-1')
+
+    expect(await screen.findByText('Alice Cooper')).toBeInTheDocument()
+    expect(fetchSessionDetail).toHaveBeenCalledWith('s-1')
+
+    // summary + answer
+    expect(screen.getByText('Клієнт задоволений сервісом.')).toBeInTheDocument()
+    expect(screen.getByText('Оцініть сервіс')).toBeInTheDocument()
+    expect(screen.getByText('Відмінно')).toBeInTheDocument()
+    expect(screen.getByText('5')).toBeInTheDocument()
+
+    // transcript messages
+    const transcript = screen.getByTestId('session-transcript')
+    expect(transcript).toBeInTheDocument()
+    expect(screen.getByText('Як вам сьогоднішній візит?')).toBeInTheDocument()
+    expect(screen.getByText('Все було чудово!')).toBeInTheDocument()
+  })
+
+  it('shows an error state with retry when the fetch fails', async () => {
+    fetchSessionDetail.mockRejectedValueOnce({ status: 500, message: 'boom' })
+    renderAt('s-1')
+    expect(await screen.findByRole('alert')).toBeInTheDocument()
+  })
+})

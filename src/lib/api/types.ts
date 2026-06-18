@@ -126,6 +126,57 @@ export interface AdminSettings {
 /** PUT /admin/settings accepts a partial update. */
 export type AdminSettingsUpdate = Partial<AdminSettings>
 
+// --- drill-down (sessions / topic+category clients) ---------
+export type SessionSentiment = 'positive' | 'neutral' | 'negative'
+
+/** Row in GET /admin/sessions and the header of a session detail. */
+export interface SessionRef {
+  id: string
+  client_id: number | null
+  client_name: string | null
+  started_at: string
+  ended_at: string | null
+  sentiment: SessionSentiment | null
+  topics: string[]
+  source: string | null
+}
+export interface SessionsResponse {
+  sessions: SessionRef[]
+}
+
+export interface SessionMessage {
+  role: 'user' | 'assistant'
+  content: string
+  created_at: string | null
+}
+export interface SessionAnswer {
+  question_text: string
+  answer_text: string
+  marked_value: string | null
+}
+/** GET /admin/sessions/{id} — full timeline. */
+export interface SessionDetail extends SessionRef {
+  summary: string | null
+  messages: SessionMessage[]
+  answers: SessionAnswer[]
+  card_summary: Record<string, unknown> | null
+}
+
+/** Row returned by topic→clients, category→clients and /admin/clients. */
+export interface ClientRef {
+  telegram_id: number
+  name: string | null
+  sessions_count: number
+  last_session_at: string | null
+  avg_sentiment: number | null
+}
+export interface ClientsResponse {
+  clients: ClientRef[]
+}
+
+/** AND narrows (intersection), OR widens (union). Backend default: and. */
+export type ClientsMatch = 'and' | 'or'
+
 // --- ask (admin chat) ---------------------------------------
 export interface AskHistoryItem {
   role: 'user' | 'assistant'

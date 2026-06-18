@@ -15,11 +15,16 @@ import type {
   AskRequest,
   AskResponse,
   ClientProfileResponse,
+  ClientsMatch,
+  ClientsResponse,
   MetricsResponse,
   OverviewResponse,
   QuestionsResponse,
   SemanticSearchRequest,
   SemanticSearchResponse,
+  SessionDetail,
+  SessionSentiment,
+  SessionsResponse,
   TopicSentiment,
   TopicsResponse,
 } from './types'
@@ -123,5 +128,90 @@ export async function updateSettings(
   override?: AxiosInstance,
 ): Promise<AdminSettings> {
   const { data } = await client(override).put<AdminSettings>('/admin/settings', patch)
+  return data
+}
+
+/* ── drill-down (sessions / topic+category clients) ─────────── */
+
+export interface SessionsQuery extends Partial<DateRange> {
+  sentiment?: SessionSentiment
+  /** 1..200, backend default 50. */
+  limit?: number
+  offset?: number
+}
+
+export async function fetchSessions(
+  query: SessionsQuery = {},
+  override?: AxiosInstance,
+): Promise<SessionsResponse> {
+  const { data } = await client(override).get<SessionsResponse>('/admin/sessions', {
+    params: query,
+  })
+  return data
+}
+
+export async function fetchSessionDetail(
+  sessionId: string,
+  override?: AxiosInstance,
+): Promise<SessionDetail> {
+  const { data } = await client(override).get<SessionDetail>(
+    `/admin/sessions/${encodeURIComponent(sessionId)}`,
+  )
+  return data
+}
+
+export async function fetchTopicClients(
+  topic: string,
+  range?: DateRange,
+  override?: AxiosInstance,
+): Promise<ClientsResponse> {
+  const { data } = await client(override).get<ClientsResponse>(
+    `/admin/topics/${encodeURIComponent(topic)}/clients`,
+    { params: range },
+  )
+  return data
+}
+
+export interface CategoryClientsQuery extends Partial<DateRange> {
+  value: string
+}
+
+export async function fetchCategoryClients(
+  metricKey: string,
+  query: CategoryClientsQuery,
+  override?: AxiosInstance,
+): Promise<ClientsResponse> {
+  const { data } = await client(override).get<ClientsResponse>(
+    `/admin/metrics/${encodeURIComponent(metricKey)}/clients`,
+    { params: query },
+  )
+  return data
+}
+
+/** Name / telegram_id lookup — distinct from the semantic search. */
+export async function fetchClientsByQuery(
+  query: string,
+  override?: AxiosInstance,
+): Promise<ClientsResponse> {
+  const { data } = await client(override).get<ClientsResponse>('/admin/clients', {
+    params: { query },
+  })
+  return data
+}
+
+/**
+ * Multi-topic filter. `match=and` intersects (narrows), `or` unions (widens).
+ * Topics serialise as repeated `topics=` params (no `[]` suffix) to match the
+ * backend's expected query shape.
+ */
+export async function fetchClientsByTopics(
+  topics: string[],
+  match: ClientsMatch = 'and',
+  override?: AxiosInstance,
+): Promise<ClientsResponse> {
+  const { data } = await client(override).get<ClientsResponse>('/admin/clients', {
+    params: { topics, match },
+    paramsSerializer: { indexes: null },
+  })
   return data
 }
