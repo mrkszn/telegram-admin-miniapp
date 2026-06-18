@@ -151,15 +151,19 @@ export interface SessionMessage {
 }
 export interface SessionAnswer {
   question_text: string
-  answer_text: string
-  marked_value: string | null
+  answer_text: string | null
+  /**
+   * Backend types this as `Any` — it's usually a scalar but can arrive as an
+   * object (e.g. `{ value: … }`). Always coerce before rendering.
+   */
+  marked_value: unknown
 }
 /** GET /admin/sessions/{id} — full timeline. */
 export interface SessionDetail extends SessionRef {
   summary: string | null
   messages: SessionMessage[]
   answers: SessionAnswer[]
-  card_summary: Record<string, unknown> | null
+  card_summary: string | null
 }
 
 /** Row returned by topic→clients, category→clients and /admin/clients. */
