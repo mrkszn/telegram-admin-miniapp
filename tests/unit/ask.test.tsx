@@ -33,8 +33,8 @@ describe('AskRoute', () => {
         <AskRoute />
       </MemoryRouter>,
     )
-    expect(screen.getByText('Спросите о данных.')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Топ-3 жалобы за неделю' })).toBeInTheDocument()
+    expect(screen.getByText('Запитайте про дані.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Топ-3 скарги за тиждень' })).toBeInTheDocument()
     expect(askAdmin).not.toHaveBeenCalled()
   })
 
@@ -50,9 +50,9 @@ describe('AskRoute', () => {
       </MemoryRouter>,
     )
     const user = userEvent.setup()
-    const textarea = screen.getByLabelText('Сообщение')
+    const textarea = screen.getByLabelText('Повідомлення')
     await user.type(textarea, 'Что хвалят клиенты?')
-    await user.click(screen.getByRole('button', { name: 'Отправить' }))
+    await user.click(screen.getByRole('button', { name: 'Відправити' }))
 
     await waitFor(() => expect(askAdmin).toHaveBeenCalledTimes(1))
     const body = askAdmin.mock.calls[0]?.[0]
@@ -76,8 +76,8 @@ describe('AskRoute', () => {
       </MemoryRouter>,
     )
     const user = userEvent.setup()
-    await user.type(screen.getByLabelText('Сообщение'), 'Покажи рейтинг')
-    await user.click(screen.getByRole('button', { name: 'Отправить' }))
+    await user.type(screen.getByLabelText('Повідомлення'), 'Покажи рейтинг')
+    await user.click(screen.getByRole('button', { name: 'Відправити' }))
 
     expect(await screen.findByText(/Динамика рейтинга/)).toBeInTheDocument()
     expect(screen.getByText(/Пн 4\.2/)).toBeInTheDocument()
@@ -103,8 +103,8 @@ describe('AskRoute', () => {
       </MemoryRouter>,
     )
     const user = userEvent.setup()
-    await user.type(screen.getByLabelText('Сообщение'), 'привет')
-    await user.click(screen.getByRole('button', { name: 'Отправить' }))
+    await user.type(screen.getByLabelText('Повідомлення'), 'привет')
+    await user.click(screen.getByRole('button', { name: 'Відправити' }))
 
     await waitFor(() => expect(bootstrapAuth).toHaveBeenCalledTimes(1))
     expect(askAdmin).toHaveBeenCalledTimes(2)

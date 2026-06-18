@@ -111,8 +111,8 @@ describe('MetricsRoute', () => {
       </MemoryRouter>,
     )
     await waitFor(() => expect(fetchMetrics).toHaveBeenCalled())
-    expect(await screen.findByText(/Среднее по метрике/)).toBeInTheDocument()
-    expect(screen.getByText('Значения по дням')).toBeInTheDocument()
+    expect(await screen.findByText(/Середнє за метрикою/)).toBeInTheDocument()
+    expect(screen.getByText('Значення за днями')).toBeInTheDocument()
     // each bucket should appear in the table column
     expect(screen.getAllByText('Пн').length).toBeGreaterThanOrEqual(1)
     expect(screen.getAllByText('Ср').length).toBeGreaterThanOrEqual(1)
@@ -128,11 +128,11 @@ describe('MetricsRoute', () => {
       </MemoryRouter>,
     )
     await waitFor(() => expect(fetchMetrics).toHaveBeenCalled())
-    expect(await screen.findByText(/Распределение по метрике/)).toBeInTheDocument()
-    expect(screen.getByText('Категории')).toBeInTheDocument()
-    // Total chip + Не определено
+    expect(await screen.findByText(/Розподіл за метрикою/)).toBeInTheDocument()
+    expect(screen.getByText('Категорії')).toBeInTheDocument()
+    // Total chip + "undefined" counter
     expect(screen.getAllByText('126').length).toBeGreaterThanOrEqual(1)
-    expect(screen.getByText('Не определено:')).toBeInTheDocument()
+    expect(screen.getByText('Не визначено:')).toBeInTheDocument()
     // category rows
     expect(screen.getAllByText('yes').length).toBeGreaterThanOrEqual(1)
   })
@@ -144,7 +144,7 @@ describe('MetricsRoute', () => {
         <MetricsRoute />
       </MemoryRouter>,
     )
-    expect(await screen.findByText(/Текстовая метрика/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Текстова метрика/i)).toBeInTheDocument()
   })
 
   it('shows "not found" for unknown metrics', async () => {
@@ -154,6 +154,6 @@ describe('MetricsRoute', () => {
         <MetricsRoute />
       </MemoryRouter>,
     )
-    expect(await screen.findByText(/не найдена/i)).toBeInTheDocument()
+    expect(await screen.findByText(/не знайдена/i)).toBeInTheDocument()
   })
 })

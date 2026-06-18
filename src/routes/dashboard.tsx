@@ -10,16 +10,17 @@ import { CountUp } from '@/components/feedback/CountUp'
 import { useApi } from '@/lib/hooks/useApi'
 import { resolveRange, DEFAULT_PRESET, type DateRangePreset } from '@/lib/date-range'
 import { fetchOverview } from '@/lib/api/admin'
+import { useT, type Translator } from '@/lib/i18n'
 import type { OverviewResponse } from '@/lib/api/types'
 import { ADMIN_NAV } from './nav'
 
 /* ── formatters ─────────────────────────────────────────── */
 
-function sentimentLabel(v: number | null): string {
+function sentimentLabel(v: number | null, t: Translator): string {
   if (v == null) return '—'
-  if (v > 0.33) return 'позитив'
-  if (v < -0.33) return 'негатив'
-  return 'нейтрально'
+  if (v > 0.33) return t('sentiment.positive')
+  if (v < -0.33) return t('sentiment.negative')
+  return t('sentiment.neutral')
 }
 
 function sentimentDeltaKind(v: number | null): 'positive' | 'negative' | 'neutral' {
@@ -55,6 +56,7 @@ function uniqueTopicsCount(o: OverviewResponse): number {
 /* ── route ──────────────────────────────────────────────── */
 
 export function DashboardRoute() {
+  const t = useT()
   const [preset, setPreset] = useState<DateRangePreset>(DEFAULT_PRESET)
   const range = useMemo(() => resolveRange(preset), [preset])
   const key = `overview|${range.date_from}|${range.date_to}`
@@ -64,7 +66,7 @@ export function DashboardRoute() {
   )
 
   return (
-    <AppShell title="Сводка" navItems={ADMIN_NAV}>
+    <AppShell title={t('title.dashboard')} navItems={ADMIN_NAV}>
       <div className="flex flex-col gap-4">
         <DateRangeChips value={preset} onChange={setPreset} />
 
@@ -83,6 +85,7 @@ export function DashboardRoute() {
 /* ── content ────────────────────────────────────────────── */
 
 function DashboardContent({ overview }: { overview: OverviewResponse }) {
+  const t = useT()
   const positiveCount = overview.top_positive_topics.reduce((s, t) => s + t.count, 0)
   const negativeCount = overview.top_negative_topics.reduce((s, t) => s + t.count, 0)
   const totalMentions = positiveCount + negativeCount
@@ -90,13 +93,13 @@ function DashboardContent({ overview }: { overview: OverviewResponse }) {
     <>
       <div className="grid grid-cols-2 gap-2.5">
         <KPICard
-          label="Сессий"
+          label={t('dashboard.kpi.sessions')}
           value={<CountUp to={overview.sessions_count} durationMs={900} />}
-          caption="за период"
+          caption={t('dashboard.kpi.sessionsCaption')}
         />
         <KPICard
-          label="Средний sentiment"
-          value={sentimentLabel(overview.avg_sentiment)}
+          label={t('dashboard.kpi.avgSentiment')}
+          value={sentimentLabel(overview.avg_sentiment, t)}
           delta={
             overview.avg_sentiment != null ? (
               <CountUp
@@ -113,12 +116,12 @@ function DashboardContent({ overview }: { overview: OverviewResponse }) {
           deltaKind={sentimentDeltaKind(overview.avg_sentiment)}
         />
         <KPICard
-          label="Топиков"
+          label={t('dashboard.kpi.topics')}
           value={<CountUp to={uniqueTopicsCount(overview)} durationMs={900} delayMs={150} />}
-          caption="уникальных"
+          caption={t('dashboard.kpi.topicsCaption')}
         />
         <KPICard
-          label="Позитив"
+          label={t('dashboard.kpi.positive')}
           value={
             positiveShareNumber(overview) != null ? (
               <CountUp
@@ -131,19 +134,26 @@ function DashboardContent({ overview }: { overview: OverviewResponse }) {
               positiveSharePct(overview)
             )
           }
-          caption={totalMentions > 0 ? `${positiveCount} из ${totalMentions}` : 'доля'}
+          caption={
+            totalMentions > 0
+              ? t('dashboard.kpi.positiveCount', {
+                  positive: positiveCount,
+                  total: totalMentions,
+                })
+              : t('dashboard.kpi.positiveShare')
+          }
           deltaKind={positiveCount >= negativeCount ? 'positive' : 'negative'}
         />
       </div>
 
       <div className="grid grid-cols-2 gap-2.5">
         <TopTopicsCard
-          title="Позитивные"
+          title={t('dashboard.cards.positive')}
           tone="positive"
           topics={overview.top_positive_topics}
         />
         <TopTopicsCard
-          title="Негативные"
+          title={t('dashboard.cards.negative')}
           tone="negative"
           topics={overview.top_negative_topics}
         />
@@ -152,7 +162,7 @@ function DashboardContent({ overview }: { overview: OverviewResponse }) {
       <section className="flex flex-col gap-2.5">
         <header className="flex items-baseline gap-2">
           <span className="serif-num text-base text-muted-2">01</span>
-          <h2 className="font-serif text-lg">Топ-5 топиков · позитив</h2>
+          <h2 className="font-serif text-lg">{t('dashboard.top5')}</h2>
         </header>
         <TopTopicsList topics={overview.top_positive_topics} tone="positive" limit={5} />
       </section>

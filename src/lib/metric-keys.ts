@@ -6,21 +6,24 @@
  *
  * NB: the previous list (rating / satisfaction / service_quality / …) was
  * stale and produced 404 from `/admin/metrics` for every value — that's
- * what the "Не удалось загрузить данные" error on the Metrics screen was.
+ * what the "failed to load data" error on the Metrics screen was.
  */
 export interface MetricKeyOption {
   value: string
   label: string
 }
 
+// Static fallback labels in Ukrainian (the default UI language). The live
+// list from GET /admin/questions overrides these whenever it loads, so these
+// only show on the very first paint or if that call fails.
 export const METRIC_KEYS: MetricKeyOption[] = [
   { value: 'nps', label: 'NPS' },
-  { value: 'service_speed', label: 'Скорость сервиса' },
-  { value: 'food_taste', label: 'Вкус блюд' },
+  { value: 'service_speed', label: 'Швидкість сервісу' },
+  { value: 'food_taste', label: 'Смак страв' },
   { value: 'cleanliness', label: 'Чистота' },
-  { value: 'price_value', label: 'Соотношение цена/качество' },
-  { value: 'staff_friendliness', label: 'Дружелюбие персонала' },
-  { value: 'improvement_wish', label: 'Пожелания' },
+  { value: 'price_value', label: 'Співвідношення ціна/якість' },
+  { value: 'staff_friendliness', label: 'Дружелюбність персоналу' },
+  { value: 'improvement_wish', label: 'Побажання' },
 ]
 
 export const DEFAULT_METRIC_KEY = METRIC_KEYS[0]!.value

@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils'
 import { AnimatedBar } from '@/components/feedback/AnimatedBar'
 import { CountUp } from '@/components/feedback/CountUp'
+import { useT } from '@/lib/i18n'
 import type { TopicCount } from '@/lib/api/types'
 
 interface TopTopicsCardProps {
@@ -32,9 +33,11 @@ export function TopTopicsCard({
   tone,
   topics,
   limit = 3,
-  emptyHint = 'Нет данных',
+  emptyHint,
 }: TopTopicsCardProps) {
+  const t = useT()
   const items = topics.slice(0, limit)
+  const empty = emptyHint ?? t('common.noData')
   const max = items[0]?.count ?? 0
   return (
     <div className="card-shell flex flex-col gap-2.5">
@@ -45,7 +48,7 @@ export function TopTopicsCard({
         <span className={cn('h-1.5 w-1.5 rounded-full', dotTone[tone])} aria-hidden="true" />
       </div>
       {items.length === 0 ? (
-        <span className="text-sm text-muted">{emptyHint}</span>
+        <span className="text-sm text-muted">{empty}</span>
       ) : (
         <ul className="m-0 flex list-none flex-col gap-2 p-0">
           {items.map((t, i) => (

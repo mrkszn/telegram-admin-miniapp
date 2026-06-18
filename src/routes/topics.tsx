@@ -11,10 +11,12 @@ import { useApi } from '@/lib/hooks/useApi'
 import { resolveRange, DEFAULT_PRESET, type DateRangePreset } from '@/lib/date-range'
 import { fetchTopics } from '@/lib/api/admin'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n'
 import type { TopicCount, TopicSentiment, TopicsResponse } from '@/lib/api/types'
 import { ADMIN_NAV } from './nav'
 
 export function TopicsRoute() {
+  const t = useT()
   const [preset, setPreset] = useState<DateRangePreset>(DEFAULT_PRESET)
   const [tone, setTone] = useState<TopicSentiment>('positive')
 
@@ -30,14 +32,14 @@ export function TopicsRoute() {
   )
 
   return (
-    <AppShell title="Топики" navItems={ADMIN_NAV}>
+    <AppShell title={t('title.topics')} navItems={ADMIN_NAV}>
       <div className="flex flex-col gap-4">
         <DateRangeChips value={preset} onChange={setPreset} />
 
         <Tabs value={tone} onValueChange={(v) => setTone(v as TopicSentiment)}>
           <TabsList>
-            <TabsTrigger value="positive">Позитивные</TabsTrigger>
-            <TabsTrigger value="negative">Негативные</TabsTrigger>
+            <TabsTrigger value="positive">{t('topics.tab.positive')}</TabsTrigger>
+            <TabsTrigger value="negative">{t('topics.tab.negative')}</TabsTrigger>
           </TabsList>
         </Tabs>
 
@@ -78,18 +80,19 @@ function TopBars({
   topics: TopicCount[]
   tone: TopicSentiment
 }) {
+  const t = useT()
   const max = topics[0]?.count ?? 0
   const barColor = tone === 'positive' ? 'bg-success' : 'bg-danger'
   return (
     <section
-      aria-label="Топ-5 топиков"
+      aria-label={t('topics.top5.aria')}
       className="card-shell flex flex-col gap-3"
     >
       <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">
-        Топ-5 · {tone === 'positive' ? 'позитив' : 'негатив'}
+        {tone === 'positive' ? t('topics.top5.positive') : t('topics.top5.negative')}
       </span>
       {topics.length === 0 ? (
-        <span className="text-sm text-muted">За период данных нет.</span>
+        <span className="text-sm text-muted">{t('topics.noDataPeriod')}</span>
       ) : (
         <ul className="m-0 flex list-none flex-col gap-2.5 p-0" data-testid="topic-bars">
           {topics.map((t, i) => {
@@ -122,13 +125,14 @@ function TopBars({
 }
 
 function TopTable({ topics }: { topics: TopicCount[] }) {
+  const t = useT()
   if (topics.length === 0) return null
   return (
     <div className="overflow-hidden rounded-card border border-line bg-surface">
       <div className="flex items-center bg-surface-2 px-3.5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-muted">
-        <span className="flex-1">Топик</span>
-        <span className="w-[70px] text-right">Sentiment</span>
-        <span className="w-[46px] text-right">Кол-во</span>
+        <span className="flex-1">{t('topics.table.topic')}</span>
+        <span className="w-[70px] text-right">{t('topics.table.sentiment')}</span>
+        <span className="w-[46px] text-right">{t('topics.table.count')}</span>
       </div>
       {topics.map((t, i) => {
         const positive = t.avg_sentiment >= 0
@@ -164,11 +168,12 @@ function TopTable({ topics }: { topics: TopicCount[] }) {
 }
 
 function MentionsPlaceholder() {
+  const t = useT()
   return (
     <section className="flex flex-col gap-2">
       <header className="flex items-baseline gap-2">
         <span className="serif-num text-base text-muted-2">01</span>
-        <h2 className="font-serif text-lg">Упоминания</h2>
+        <h2 className="font-serif text-lg">{t('topics.mentions.title')}</h2>
       </header>
       <div className="card-shell flex items-start gap-3">
         <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-soft text-brand-deep">
@@ -176,12 +181,9 @@ function MentionsPlaceholder() {
         </span>
         <div className="flex flex-col gap-1.5">
           <p className="font-serif text-lg leading-tight text-ink">
-            Следующая итерация
+            {t('topics.mentions.next')}
           </p>
-          <p className="text-sm leading-relaxed text-muted">
-            Подключение к семантическому поиску по топикам — в следующем релизе.
-            Пока используйте «Клиенты» и «Чат».
-          </p>
+          <p className="text-sm leading-relaxed text-muted">{t('topics.mentions.body')}</p>
         </div>
       </div>
     </section>

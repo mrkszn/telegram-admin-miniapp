@@ -116,7 +116,7 @@ export interface QuestionsResponse {
 
 // --- settings -----------------------------------------------
 export type SettingsTheme = 'light' | 'dark' | 'system'
-export type SettingsLanguage = 'ru' | 'en'
+export type SettingsLanguage = 'uk' | 'en'
 
 export interface AdminSettings {
   theme: SettingsTheme

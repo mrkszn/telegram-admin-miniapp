@@ -1,5 +1,6 @@
 import { RouterProvider, createBrowserRouter } from 'react-router-dom'
 import { ThemeProvider } from '@/components/layout/ThemeProvider'
+import { LanguageSync } from '@/lib/i18n/LanguageSync'
 import { BgParticles } from '@/components/feedback/BgParticles'
 import { RootRoute } from '@/routes/root'
 import { DashboardRoute } from '@/routes/dashboard'
@@ -22,6 +23,7 @@ const router = createBrowserRouter([
 export function App() {
   return (
     <ThemeProvider>
+      <LanguageSync />
       <BgParticles />
       <RouterProvider router={router} />
     </ThemeProvider>

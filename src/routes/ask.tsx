@@ -4,13 +4,14 @@ import { ChatWidget, type ChatMessage, type ChatWidgetHandle } from '@/component
 import { ChartFromText } from '@/components/chat/ChartFromText'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { useChatStore, type StoredChatMessage } from '@/lib/state/chat-store'
+import { useT, type TranslationKey } from '@/lib/i18n'
 import { ADMIN_NAV } from './nav'
 
-const SUGGESTED_PROMPTS = [
-  'Топ-3 жалобы за неделю',
-  'Сводка за 30 дней',
-  'Что хвалят клиенты',
-  'Найди жалобы на скорость',
+const SUGGESTED_PROMPT_KEYS: TranslationKey[] = [
+  'ask.prompt.1',
+  'ask.prompt.2',
+  'ask.prompt.3',
+  'ask.prompt.4',
 ]
 
 /**
@@ -27,6 +28,7 @@ function hydrate(stored: StoredChatMessage): ChatMessage {
 }
 
 export function AskRoute() {
+  const t = useT()
   const messages = useChatStore((s) => s.messages)
   const isBusy = useChatStore((s) => s.isBusy)
   const error = useChatStore((s) => s.error)
@@ -51,7 +53,7 @@ export function AskRoute() {
 
   return (
     <AppShell
-      title="Чат"
+      title={t('title.ask')}
       navItems={ADMIN_NAV}
       contentClassName="flex flex-col gap-0 px-3 py-0"
     >
@@ -67,7 +69,7 @@ export function AskRoute() {
           messages={messages.map(hydrate)}
           onSubmit={handleSubmit}
           isBusy={isBusy}
-          placeholder="Спросите про метрики или клиентов…"
+          placeholder={t('ask.placeholder')}
           emptyState={<SuggestedPrompts onPick={(p) => void send(p)} />}
         />
       </div>
@@ -78,26 +80,25 @@ export function AskRoute() {
 /* ── helpers ────────────────────────────────────────────── */
 
 function SuggestedPrompts({ onPick }: { onPick(p: string): void }) {
+  const t = useT()
   return (
     <div className="flex max-w-md flex-col items-center gap-3 text-center">
-      <p className="font-serif text-[22px] leading-tight text-ink">
-        Спросите о данных.
-      </p>
-      <p className="text-sm leading-relaxed text-muted">
-        Агент сходит в метрики, топики и клиентов и вернёт сводку.
-        Можно уйти на другую вкладку, пока он считает — ответ дождётся вас здесь.
-      </p>
+      <p className="font-serif text-[22px] leading-tight text-ink">{t('ask.empty.title')}</p>
+      <p className="text-sm leading-relaxed text-muted">{t('ask.empty.body')}</p>
       <div className="flex flex-wrap justify-center gap-2 pt-2">
-        {SUGGESTED_PROMPTS.map((p) => (
-          <button
-            key={p}
-            type="button"
-            onClick={() => onPick(p)}
-            className="whitespace-nowrap rounded-full border border-line bg-surface px-3 py-1.5 text-[13px] text-ink-2 transition-colors hover:border-line-strong hover:text-ink"
-          >
-            {p}
-          </button>
-        ))}
+        {SUGGESTED_PROMPT_KEYS.map((key) => {
+          const prompt = t(key)
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => onPick(prompt)}
+              className="whitespace-nowrap rounded-full border border-line bg-surface px-3 py-1.5 text-[13px] text-ink-2 transition-colors hover:border-line-strong hover:text-ink"
+            >
+              {prompt}
+            </button>
+          )
+        })}
       </div>
     </div>
   )

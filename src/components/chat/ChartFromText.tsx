@@ -1,5 +1,6 @@
 import { BarChartCard } from '@/components/charts/BarChartCard'
 import { LineChartCard } from '@/components/charts/LineChartCard'
+import { useT } from '@/lib/i18n'
 
 /**
  * Renders the agent's `chart_text` field as a real Tremor chart when the
@@ -88,6 +89,7 @@ interface Props {
 }
 
 export function ChartFromText({ text }: Props) {
+  const t = useT()
   const parsed = parseChart(text)
 
   if (parsed.kind === 'fallback') {
@@ -104,7 +106,7 @@ export function ChartFromText({ text }: Props) {
   if (parsed.kind === 'bar') {
     return (
       <BarChartCard
-        title={parsed.title ?? 'Распределение'}
+        title={parsed.title ?? t('chart.distribution')}
         data={data}
         index="label"
         categories={['value']}
@@ -122,7 +124,7 @@ export function ChartFromText({ text }: Props) {
 
   return (
     <LineChartCard
-      title={parsed.title ?? 'Тренд'}
+      title={parsed.title ?? t('chart.trend')}
       data={data}
       index="label"
       categories={['value']}

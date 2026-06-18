@@ -18,7 +18,7 @@ describe('ChatWidget', () => {
     )
     expect(screen.getByText('Привет')).toBeInTheDocument()
     expect(screen.getByText('Здравствуйте')).toBeInTheDocument()
-    const input = screen.getByLabelText('Сообщение')
+    const input = screen.getByLabelText('Повідомлення')
     await user.type(input, 'Покажи метрики{Enter}')
     expect(onSubmit).toHaveBeenCalledWith('Покажи метрики')
     expect(input).toHaveValue('')
@@ -28,7 +28,7 @@ describe('ChatWidget', () => {
     const onSubmit = vi.fn()
     const user = userEvent.setup()
     render(<ChatWidget messages={[]} onSubmit={onSubmit} />)
-    const input = screen.getByLabelText('Сообщение')
+    const input = screen.getByLabelText('Повідомлення')
     await user.type(input, '   {Enter}')
     expect(onSubmit).not.toHaveBeenCalled()
   })
@@ -37,7 +37,7 @@ describe('ChatWidget', () => {
     const onSubmit = vi.fn()
     const user = userEvent.setup()
     render(<ChatWidget messages={[]} onSubmit={onSubmit} />)
-    const input = screen.getByLabelText('Сообщение') as HTMLTextAreaElement
+    const input = screen.getByLabelText('Повідомлення') as HTMLTextAreaElement
     await user.type(input, 'a{Shift>}{Enter}{/Shift}b')
     expect(onSubmit).not.toHaveBeenCalled()
     expect(input.value).toContain('\n')
@@ -45,7 +45,7 @@ describe('ChatWidget', () => {
 
   it('disables input + send while busy', () => {
     render(<ChatWidget messages={[]} onSubmit={() => {}} isBusy />)
-    expect(screen.getByLabelText('Сообщение')).toBeDisabled()
-    expect(screen.getByLabelText('Отправить')).toBeDisabled()
+    expect(screen.getByLabelText('Повідомлення')).toBeDisabled()
+    expect(screen.getByLabelText('Відправити')).toBeDisabled()
   })
 })

@@ -17,6 +17,7 @@ import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
 import { fetchClientProfile, semanticSearch } from '@/lib/api/admin'
 import { toApiError } from '@/lib/api/client'
 import { cn } from '@/lib/utils'
+import { useT, useLanguage, dateLocale, type TranslationKey } from '@/lib/i18n'
 import type {
   ApiError,
   ClientProfileResponse,
@@ -25,14 +26,15 @@ import type {
 } from '@/lib/api/types'
 import { ADMIN_NAV } from './nav'
 
-const SUGGESTIONS = [
-  'жалобы на доставку',
-  'хвалят сервис',
-  'долгое ожидание',
-  'постоянные гости',
+const SUGGESTION_KEYS: TranslationKey[] = [
+  'clients.suggestion.1',
+  'clients.suggestion.2',
+  'clients.suggestion.3',
+  'clients.suggestion.4',
 ]
 
 export function ClientsRoute() {
+  const t = useT()
   const [query, setQuery] = useState('')
   const debounced = useDebouncedValue(query.trim(), 300)
 
@@ -71,7 +73,7 @@ export function ClientsRoute() {
   const onSuggest = useCallback((s: string) => setQuery(s), [])
 
   return (
-    <AppShell title="Клиенты" navItems={ADMIN_NAV}>
+    <AppShell title={t('title.clients')} navItems={ADMIN_NAV}>
       <div className="flex flex-col gap-4">
         <SearchInput value={query} onChange={setQuery} />
 
@@ -82,7 +84,7 @@ export function ClientsRoute() {
         ) : error ? (
           <ErrorState onRetry={() => setQuery((q) => q + ' ')} />
         ) : hits.length === 0 ? (
-          <p className="text-sm text-muted">Ничего не найдено.</p>
+          <p className="text-sm text-muted">{t('clients.nothingFound')}</p>
         ) : (
           <HitsSection hits={hits} onPick={(id) => setOpenId(id)} />
         )}
@@ -107,6 +109,7 @@ function SearchInput({
   value: string
   onChange(next: string): void
 }) {
+  const t = useT()
   return (
     <div className="relative">
       <Search
@@ -117,15 +120,15 @@ function SearchInput({
       <Input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        aria-label="Поиск клиентов"
-        placeholder="Опишите, кого ищете…"
+        aria-label={t('clients.search.aria')}
+        placeholder={t('clients.search.placeholder')}
         className="h-11 rounded-input pl-9 pr-9 text-base"
       />
       {value ? (
         <button
           type="button"
           onClick={() => onChange('')}
-          aria-label="Очистить запрос"
+          aria-label={t('clients.search.clear')}
           className="absolute right-2 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-input text-muted hover:text-ink"
         >
           <X className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
@@ -136,35 +139,38 @@ function SearchInput({
 }
 
 function SuggestionsPanel({ onPick }: { onPick(s: string): void }) {
+  const t = useT()
   return (
     <div className="flex flex-col gap-3">
       <p className="font-serif text-[22px] italic leading-tight text-ink">
-        Спросите голосом владельца.
+        {t('clients.askOwner')}
       </p>
-      <p className="text-sm leading-relaxed text-muted">
-        Семантический поиск ищет клиентов по смыслу запроса, не по имени или id.
-      </p>
+      <p className="text-sm leading-relaxed text-muted">{t('clients.semanticHint')}</p>
       <div className="flex flex-wrap gap-2">
-        {SUGGESTIONS.map((s) => (
-          <button
-            key={s}
-            type="button"
-            onClick={() => onPick(s)}
-            className="whitespace-nowrap rounded-full border border-line bg-surface px-3 py-1.5 text-[13px] text-ink-2 transition-colors hover:border-line-strong hover:text-ink"
-          >
-            {s}
-          </button>
-        ))}
+        {SUGGESTION_KEYS.map((key) => {
+          const suggestion = t(key)
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => onPick(suggestion)}
+              className="whitespace-nowrap rounded-full border border-line bg-surface px-3 py-1.5 text-[13px] text-ink-2 transition-colors hover:border-line-strong hover:text-ink"
+            >
+              {suggestion}
+            </button>
+          )
+        })}
       </div>
     </div>
   )
 }
 
 function SearchingHint() {
+  const t = useT()
   return (
     <div className="flex items-center gap-2 text-sm text-muted">
       <BrandSpinner size="sm" />
-      <span>Поиск…</span>
+      <span>{t('clients.searching')}</span>
     </div>
   )
 }
@@ -178,13 +184,16 @@ function HitsSection({
   hits: SemanticHit[]
   onPick(clientId: number): void
 }) {
+  const t = useT()
   return (
     <div className="flex flex-col gap-2.5">
       <div className="flex items-baseline justify-between">
         <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted">
-          {hits.length} {plural(hits.length, ['результат', 'результата', 'результатов'])}
+          {hits.length} {t('clients.results', { count: hits.length })}
         </span>
-        <span className="font-serif text-[11.5px] italic text-muted-2">по смыслу</span>
+        <span className="font-serif text-[11.5px] italic text-muted-2">
+          {t('clients.byMeaning')}
+        </span>
       </div>
       <ul className="flex list-none flex-col gap-2 p-0" data-testid="hit-list">
         {hits.map((h) => (
@@ -198,6 +207,8 @@ function HitsSection({
 }
 
 function HitCard({ hit, onPick }: { hit: SemanticHit; onPick(): void }) {
+  const t = useT()
+  const lang = useLanguage()
   const disabled = hit.client_id == null
   const tone: 'positive' | 'negative' | 'neutral' =
     hit.sentiment === 'positive'
@@ -207,11 +218,11 @@ function HitCard({ hit, onPick }: { hit: SemanticHit; onPick(): void }) {
         : 'neutral'
   const sentLabel =
     hit.sentiment === 'positive'
-      ? 'позитив'
+      ? t('sentiment.positive')
       : hit.sentiment === 'negative'
-        ? 'негатив'
+        ? t('sentiment.negative')
         : hit.sentiment === 'neutral'
-          ? 'нейтрально'
+          ? t('sentiment.neutral')
           : '—'
   const sentChip = {
     positive: 'bg-mint/20 text-success',
@@ -219,12 +230,12 @@ function HitCard({ hit, onPick }: { hit: SemanticHit; onPick(): void }) {
     neutral: 'bg-surface-2 text-muted',
   }[tone]
   const date = hit.started_at
-    ? new Date(hit.started_at).toLocaleDateString('ru-RU', {
+    ? new Date(hit.started_at).toLocaleDateString(dateLocale(lang), {
         day: '2-digit',
         month: 'short',
       })
     : ''
-  const name = hit.client_id != null ? `Клиент ${hit.client_id}` : 'Аноним'
+  const name = hit.client_id != null ? t('clients.client', { id: hit.client_id }) : t('clients.anon')
   const summary =
     hit.summary_text.length > 110
       ? `${hit.summary_text.slice(0, 110)}…`
@@ -275,6 +286,7 @@ function ProfileSheet({
   telegramId: number | null
   onOpenChange(open: boolean): void
 }) {
+  const t = useT()
   const [profile, setProfile] = useState<ClientProfileResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<ApiError | null>(null)
@@ -309,22 +321,22 @@ function ProfileSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="max-h-[88vh] overflow-y-auto rounded-t-sheet">
         <SheetHeader>
-          <SheetTitle className="sr-only">Профиль клиента</SheetTitle>
+          <SheetTitle className="sr-only">{t('clients.profile.title')}</SheetTitle>
           <SheetDescription className="sr-only">
-            Сводка по клиенту: количество сессий, средний sentiment, топики.
+            {t('clients.profile.description')}
           </SheetDescription>
         </SheetHeader>
         {loading ? (
           <div className="flex items-center gap-2 py-3 text-sm text-muted">
             <BrandSpinner size="sm" />
-            <span>Загрузка профиля…</span>
+            <span>{t('clients.profile.loading')}</span>
           </div>
         ) : error ? (
-          <ErrorState message="Профиль не загрузился." />
+          <ErrorState message={t('clients.profile.loadError')} />
         ) : profile ? (
           <ProfileBody profile={profile} />
         ) : (
-          <p className="py-3 text-sm text-muted">Профиль не найден.</p>
+          <p className="py-3 text-sm text-muted">{t('clients.profile.notFound')}</p>
         )}
       </SheetContent>
     </Sheet>
@@ -332,6 +344,8 @@ function ProfileSheet({
 }
 
 function ProfileBody({ profile }: { profile: ClientProfileResponse }) {
+  const t = useT()
+  const lang = useLanguage()
   const sentColor =
     profile.avg_sentiment == null
       ? 'text-ink'
@@ -341,12 +355,12 @@ function ProfileBody({ profile }: { profile: ClientProfileResponse }) {
           ? 'text-danger'
           : 'text-warning'
   const last = profile.last_session_at
-    ? new Date(profile.last_session_at).toLocaleDateString('ru-RU', {
+    ? new Date(profile.last_session_at).toLocaleDateString(dateLocale(lang), {
         day: '2-digit',
         month: 'long',
       })
     : '—'
-  const name = profile.name ?? `Клиент ${profile.telegram_id}`
+  const name = profile.name ?? t('clients.client', { id: profile.telegram_id })
 
   return (
     <div className="flex flex-col gap-4">
@@ -355,14 +369,14 @@ function ProfileBody({ profile }: { profile: ClientProfileResponse }) {
         <div className="min-w-0 flex-1">
           <p className="truncate text-lg font-semibold text-ink">{name}</p>
           <p className="font-mono text-[12.5px] text-muted-2">
-            telegram #{profile.telegram_id} · последняя сессия {last}
+            telegram #{profile.telegram_id} · {t('clients.profile.lastSession')} {last}
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
         <ProfileStat
-          label="Сессий"
+          label={t('clients.profile.sessions')}
           value={<CountUp to={profile.sessions_count} durationMs={900} />}
         />
         <ProfileStat
@@ -387,7 +401,7 @@ function ProfileBody({ profile }: { profile: ClientProfileResponse }) {
       {profile.top_topics.length > 0 ? (
         <section className="flex flex-col gap-2">
           <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">
-            Топики
+            {t('clients.profile.topics')}
           </p>
           <div className="flex flex-wrap gap-1.5">
             {profile.top_topics.slice(0, 6).map((t, i) => (
@@ -407,7 +421,7 @@ function ProfileBody({ profile }: { profile: ClientProfileResponse }) {
       {profile.recent_cards.length > 0 ? (
         <section className="flex flex-col gap-2">
           <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">
-            Последние карточки
+            {t('clients.profile.recentCards')}
           </p>
           <div className="flex flex-col gap-2">
             {profile.recent_cards.slice(0, 3).map((card, i) => (
@@ -497,10 +511,10 @@ function cardKey(raw: Record<string, unknown>, fallback: number): string {
   return id ?? `card-${fallback}`
 }
 
-const SENTIMENT_LABEL: Record<string, string> = {
-  positive: 'позитивный',
-  neutral: 'нейтральный',
-  negative: 'негативный',
+const SENTIMENT_LABEL_KEY: Record<string, TranslationKey> = {
+  positive: 'clients.cardSentiment.positive',
+  neutral: 'clients.cardSentiment.neutral',
+  negative: 'clients.cardSentiment.negative',
 }
 
 const SENTIMENT_CLASS: Record<string, string> = {
@@ -509,11 +523,11 @@ const SENTIMENT_CLASS: Record<string, string> = {
   negative: 'bg-rose/15 text-danger',
 }
 
-function formatCardDate(iso: string | null): string | null {
+function formatCardDate(iso: string | null, locale: string): string | null {
   if (!iso) return null
   const dt = new Date(iso)
   if (Number.isNaN(dt.getTime())) return iso.slice(0, 10)
-  return dt.toLocaleString('ru-RU', {
+  return dt.toLocaleString(locale, {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -523,21 +537,23 @@ function formatCardDate(iso: string | null): string | null {
 }
 
 function RecentCardItem({ card }: { card: Record<string, unknown> }) {
+  const t = useT()
+  const lang = useLanguage()
   const parsed = parseCard(card)
   const sentiment = parsed.sentiment?.toLowerCase()
-  const date = formatCardDate(parsed.createdAt)
+  const date = formatCardDate(parsed.createdAt, dateLocale(lang))
 
   return (
     <article className="rounded-card border border-line bg-surface p-3.5">
       <header className="flex flex-wrap items-center gap-2">
-        {sentiment && SENTIMENT_LABEL[sentiment] ? (
+        {sentiment && SENTIMENT_LABEL_KEY[sentiment] ? (
           <span
             className={cn(
               'inline-flex rounded-tag px-2 py-0.5 text-[11px] font-medium',
               SENTIMENT_CLASS[sentiment] ?? 'bg-surface-2 text-muted',
             )}
           >
-            {SENTIMENT_LABEL[sentiment]}
+            {t(SENTIMENT_LABEL_KEY[sentiment]!)}
           </span>
         ) : null}
         {date ? <span className="text-[12px] text-muted">{date}</span> : null}
@@ -548,7 +564,7 @@ function RecentCardItem({ card }: { card: Record<string, unknown> }) {
           {parsed.summary}
         </p>
       ) : (
-        <p className="mt-2 text-[13px] italic text-muted">Без описания.</p>
+        <p className="mt-2 text-[13px] italic text-muted">{t('clients.card.noDescription')}</p>
       )}
 
       {parsed.topics.length > 0 ? (
@@ -578,12 +594,3 @@ function RecentCardItem({ card }: { card: Record<string, unknown> }) {
   )
 }
 
-/* ── tiny utils ─────────────────────────────────────────── */
-
-function plural(n: number, forms: [string, string, string]): string {
-  const mod10 = n % 10
-  const mod100 = n % 100
-  if (mod10 === 1 && mod100 !== 11) return forms[0]
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return forms[1]
-  return forms[2]
-}

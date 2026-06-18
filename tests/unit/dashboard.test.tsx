@@ -51,16 +51,16 @@ describe('DashboardRoute', () => {
     await waitFor(() => expect(fetchOverview).toHaveBeenCalled())
 
     // KPI cards (scoped lookup so digits in the Top-5 list don't clash)
-    const kpiSessions = screen.getByText('Сессий').closest('div')!.parentElement!
+    const kpiSessions = screen.getByText('Сесій').closest('div')!.parentElement!
     expect(within(kpiSessions).getByText('142')).toBeInTheDocument()
 
-    const kpiSentiment = screen.getByText('Средний sentiment').closest('div')!.parentElement!
+    const kpiSentiment = screen.getByText('Середній sentiment').closest('div')!.parentElement!
     expect(within(kpiSentiment).getByText('позитив')).toBeInTheDocument()
-    // ru-RU decimal separator from CountUp's toLocaleString, + sign because
+    // uk-UA decimal separator from CountUp's toLocaleString, + sign because
     // the sentiment is positive.
     expect(within(kpiSentiment).getByText('+0,42')).toBeInTheDocument()
 
-    const kpiTopics = screen.getByText('Топиков').closest('div')!.parentElement!
+    const kpiTopics = screen.getByText('Тем').closest('div')!.parentElement!
     // 5 positive + 2 negative = 7 distinct (no overlap).
     expect(within(kpiTopics).getByText('7')).toBeInTheDocument()
 
@@ -70,15 +70,15 @@ describe('DashboardRoute', () => {
 
     // top topics cards + top-5 list both reference positive topic names,
     // so use getAllByText for those.
-    expect(screen.getByText('Позитивные')).toBeInTheDocument()
-    expect(screen.getByText('Негативные')).toBeInTheDocument()
+    expect(screen.getByText('Позитивні')).toBeInTheDocument()
+    expect(screen.getByText('Негативні')).toBeInTheDocument()
     expect(screen.getAllByText('Скорость подачи').length).toBeGreaterThanOrEqual(2)
     expect(screen.getAllByText('Дружелюбный персонал').length).toBeGreaterThanOrEqual(2)
     // Negative topics only render in the negative card.
     expect(screen.getByText('Медленный счёт')).toBeInTheDocument()
 
     // Top-5 section header
-    expect(screen.getByText('Топ-5 топиков · позитив')).toBeInTheDocument()
+    expect(screen.getByText('Топ-5 тем · позитив')).toBeInTheDocument()
   })
 
   it('renders error state on failure with retry', async () => {
@@ -89,7 +89,7 @@ describe('DashboardRoute', () => {
       </MemoryRouter>,
     )
     expect(await screen.findByRole('alert')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /повторить/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /повторити/i })).toBeInTheDocument()
   })
 
   it('formats neutral sentiment when avg is null', async () => {
@@ -103,7 +103,7 @@ describe('DashboardRoute', () => {
     )
     // sentiment value AND delta both render "—" — wait for the KPI to settle.
     await waitFor(() => expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(2))
-    // empty top topics → "Нет данных" placeholder in both pos and neg cards.
-    expect(screen.getAllByText('Нет данных').length).toBeGreaterThanOrEqual(2)
+    // empty top topics → "Немає даних" placeholder in both pos and neg cards.
+    expect(screen.getAllByText('Немає даних').length).toBeGreaterThanOrEqual(2)
   })
 })

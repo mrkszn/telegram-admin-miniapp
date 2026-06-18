@@ -1,7 +1,7 @@
 /**
  * /topics wiring — asserts:
  *  1. initial request asks for sentiment=positive
- *  2. switching to the «Негативные» tab triggers a new request with
+ *  2. switching to the «Негативні» tab triggers a new request with
  *     sentiment=negative
  *  3. top-5 bars + per-topic table render with the topic names
  */
@@ -62,7 +62,7 @@ describe('TopicsRoute', () => {
     expect(screen.getByText('+0,70')).toBeInTheDocument()
   })
 
-  it('switching to «Негативные» triggers a fetch with sentiment=negative', async () => {
+  it('switching to «Негативні» triggers a fetch with sentiment=negative', async () => {
     fetchTopics.mockResolvedValueOnce(positiveResponse())
     fetchTopics.mockResolvedValueOnce(negativeResponse())
     render(
@@ -73,7 +73,7 @@ describe('TopicsRoute', () => {
     await waitFor(() => expect(fetchTopics).toHaveBeenCalledTimes(1))
 
     const user = userEvent.setup()
-    await user.click(screen.getByRole('tab', { name: 'Негативные' }))
+    await user.click(screen.getByRole('tab', { name: 'Негативні' }))
 
     await waitFor(() => expect(fetchTopics).toHaveBeenCalledTimes(2))
     expect(fetchTopics.mock.calls[1]?.[0]?.sentiment).toBe('negative')
@@ -90,8 +90,8 @@ describe('TopicsRoute', () => {
         <TopicsRoute />
       </MemoryRouter>,
     )
-    expect(await screen.findByText('За период данных нет.')).toBeInTheDocument()
+    expect(await screen.findByText('За період даних немає.')).toBeInTheDocument()
     // mentions placeholder still renders
-    expect(screen.getByText('Следующая итерация')).toBeInTheDocument()
+    expect(screen.getByText('Наступна ітерація')).toBeInTheDocument()
   })
 })

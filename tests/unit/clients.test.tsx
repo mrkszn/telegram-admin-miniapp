@@ -69,9 +69,9 @@ describe('ClientsRoute', () => {
         <ClientsRoute />
       </MemoryRouter>,
     )
-    expect(screen.getByText('Спросите голосом владельца.')).toBeInTheDocument()
+    expect(screen.getByText('Запитайте голосом власника.')).toBeInTheDocument()
     // any one suggestion chip
-    expect(screen.getByRole('button', { name: 'жалобы на доставку' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'скарги на доставку' })).toBeInTheDocument()
     expect(semanticSearch).not.toHaveBeenCalled()
   })
 
@@ -83,7 +83,7 @@ describe('ClientsRoute', () => {
       </MemoryRouter>,
     )
     const user = userEvent.setup()
-    await user.type(screen.getByLabelText('Поиск клиентов'), 'долгое ожидание')
+    await user.type(screen.getByLabelText('Пошук клієнтів'), 'долгое ожидание')
     await waitFor(() => expect(semanticSearch).toHaveBeenCalledTimes(1), {
       timeout: 2000,
     })
@@ -92,8 +92,8 @@ describe('ClientsRoute', () => {
       top_k: 10,
     })
     expect(await screen.findByTestId('hit-list')).toBeInTheDocument()
-    expect(screen.getByText('Клиент 42')).toBeInTheDocument()
-    expect(screen.getByText('Клиент 17')).toBeInTheDocument()
+    expect(screen.getByText('Клієнт 42')).toBeInTheDocument()
+    expect(screen.getByText('Клієнт 17')).toBeInTheDocument()
   })
 
   it('clicking a hit opens the Sheet and fetches the client profile', async () => {
@@ -105,13 +105,13 @@ describe('ClientsRoute', () => {
       </MemoryRouter>,
     )
     const user = userEvent.setup()
-    await user.type(screen.getByLabelText('Поиск клиентов'), 'ожидание')
-    await screen.findByText('Клиент 42')
-    await user.click(screen.getByText('Клиент 42'))
+    await user.type(screen.getByLabelText('Пошук клієнтів'), 'ожидание')
+    await screen.findByText('Клієнт 42')
+    await user.click(screen.getByText('Клієнт 42'))
 
     await waitFor(() => expect(fetchClientProfile).toHaveBeenCalledWith(42))
     expect(await screen.findByText('Анна Иванова')).toBeInTheDocument()
-    expect(screen.getByText('Сессий')).toBeInTheDocument()
+    expect(screen.getByText('Сесій')).toBeInTheDocument()
     // sessions value (Сессий = 7)
     expect(screen.getByText('7')).toBeInTheDocument()
     // signed sentiment (-0.18) — CountUp formats via toLocaleString('ru-RU'),

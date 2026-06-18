@@ -13,10 +13,10 @@ import { ClientsRoute } from '@/routes/clients'
 import { AskRoute } from '@/routes/ask'
 
 const cases: Array<{ name: string; title: string; Component: () => ReactElement }> = [
-  { name: 'dashboard', title: 'Сводка', Component: DashboardRoute },
+  { name: 'dashboard', title: 'Зведення', Component: DashboardRoute },
   { name: 'metrics', title: 'Метрики', Component: MetricsRoute },
-  { name: 'topics', title: 'Топики', Component: TopicsRoute },
-  { name: 'clients', title: 'Клиенты', Component: ClientsRoute },
+  { name: 'topics', title: 'Теми', Component: TopicsRoute },
+  { name: 'clients', title: 'Клієнти', Component: ClientsRoute },
   { name: 'ask', title: 'Чат', Component: AskRoute },
 ]
 
@@ -29,13 +29,13 @@ describe('admin route smoke', () => {
         </MemoryRouter>,
       )
       expect(screen.getByRole('heading', { name: title })).toBeInTheDocument()
-      // 5-slot BottomNav (Главная / Метрики / Топики / Клиенты / Чат).
-      const nav = screen.getByRole('navigation', { name: 'Основная навигация' })
+      // 5-slot BottomNav (Головна / Метрики / Теми / Клієнти / Чат).
+      const nav = screen.getByRole('navigation', { name: 'Основна навігація' })
       expect(nav).toBeInTheDocument()
       // Scope the label lookup to the nav so the header title can reuse the
       // same word (e.g. /metrics — title "Метрики" + nav slot "Метрики").
       const inNav = within(nav)
-      for (const label of ['Главная', 'Метрики', 'Топики', 'Клиенты', 'Чат']) {
+      for (const label of ['Головна', 'Метрики', 'Теми', 'Клієнти', 'Чат']) {
         expect(inNav.getByText(label)).toBeInTheDocument()
       }
     })
