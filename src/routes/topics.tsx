@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import { Clock } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
 import { DateRangeChips } from '@/components/filters/DateRangeChips'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -8,8 +7,10 @@ import { Skeleton } from '@/components/feedback/Skeleton'
 import { AnimatedBar } from '@/components/feedback/AnimatedBar'
 import { CountUp } from '@/components/feedback/CountUp'
 import { ClientListSheet } from '@/components/clients/ClientListSheet'
+import { AskAiMarker } from '@/components/chat/AskAiMarker'
 import { useApi } from '@/lib/hooks/useApi'
-import { resolveRange, DEFAULT_PRESET, type DateRangePreset } from '@/lib/date-range'
+import { usePersistentState } from '@/lib/hooks/usePersistentState'
+import { resolveRange, DEFAULT_PRESET, isDateRangePreset, type DateRangePreset } from '@/lib/date-range'
 import { fetchTopics, fetchTopicClients, type DateRange } from '@/lib/api/admin'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n'
@@ -18,8 +19,16 @@ import { ADMIN_NAV } from './nav'
 
 export function TopicsRoute() {
   const t = useT()
-  const [preset, setPreset] = useState<DateRangePreset>(DEFAULT_PRESET)
-  const [tone, setTone] = useState<TopicSentiment>('positive')
+  const [preset, setPreset] = usePersistentState<DateRangePreset>(
+    'period',
+    DEFAULT_PRESET,
+    isDateRangePreset,
+  )
+  const [tone, setTone] = usePersistentState<TopicSentiment>(
+    'topics_tone',
+    'positive',
+    (v): v is TopicSentiment => v === 'positive' || v === 'negative',
+  )
 
   const range = useMemo(() => resolveRange(preset), [preset])
   const key = `topics|${tone}|${range.date_from}|${range.date_to}`
@@ -55,8 +64,6 @@ export function TopicsRoute() {
             range={{ date_from: range.date_from, date_to: range.date_to }}
           />
         )}
-
-        <MentionsPlaceholder />
       </div>
     </AppShell>
   )
@@ -122,13 +129,13 @@ function TopBars({
             return (
               <li
                 key={`${tone}|${tc.topic}`}
-                className="animate-fade-rise"
+                className="relative flex animate-fade-rise items-center gap-1"
                 style={{ animationDelay: `${i * 60}ms` }}
               >
                 <button
                   type="button"
                   onClick={() => onPickTopic(tc.topic)}
-                  className="flex w-full items-center gap-2.5 rounded-tag text-left transition-colors hover:bg-surface-2"
+                  className="flex flex-1 items-center gap-2.5 rounded-tag text-left transition-colors hover:bg-surface-2"
                 >
                   <span className="serif-num w-5 text-[15px] text-muted-2">{i + 1}</span>
                   <span className="flex-[0_0_38%] truncate text-[13.5px] text-ink">{tc.topic}</span>
@@ -143,6 +150,10 @@ function TopBars({
                     <CountUp to={tc.count} delayMs={150 + i * 80} durationMs={650} />
                   </span>
                 </button>
+                <AskAiMarker
+                  question={t('askAi.topic', { topic: tc.topic })}
+                  className="h-6 w-6"
+                />
               </li>
             )
           })}
@@ -200,29 +211,6 @@ function TopTable({
         )
       })}
     </div>
-  )
-}
-
-function MentionsPlaceholder() {
-  const t = useT()
-  return (
-    <section className="flex flex-col gap-2">
-      <header className="flex items-baseline gap-2">
-        <span className="serif-num text-base text-muted-2">01</span>
-        <h2 className="font-serif text-lg">{t('topics.mentions.title')}</h2>
-      </header>
-      <div className="card-shell flex items-start gap-3">
-        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-soft text-brand-deep">
-          <Clock className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
-        </span>
-        <div className="flex flex-col gap-1.5">
-          <p className="font-serif text-lg leading-tight text-ink">
-            {t('topics.mentions.next')}
-          </p>
-          <p className="text-sm leading-relaxed text-muted">{t('topics.mentions.body')}</p>
-        </div>
-      </div>
-    </section>
   )
 }
 

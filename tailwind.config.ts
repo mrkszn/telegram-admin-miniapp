@@ -61,6 +61,10 @@ const config: Config = {
           soft: 'var(--primary-soft)',
           tint: 'var(--primary-tint)',
           on: 'var(--primary-on)',
+          // Readable accent *text* on plain surfaces (vs the --primary fill).
+          text: 'var(--accent-text)',
+          // Readable accent text on the --primary-soft chip background.
+          'on-soft': 'var(--accent-on-subtle)',
         },
         accent: 'var(--accent)',
         mint: 'var(--mint)',

@@ -10,6 +10,7 @@ import { ClientProfileSheet } from '@/components/clients/ClientProfileSheet'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { useApi } from '@/lib/hooks/useApi'
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
+import { usePersistentState } from '@/lib/hooks/usePersistentState'
 import {
   fetchClientsByQuery,
   fetchClientsByTopics,
@@ -41,7 +42,11 @@ const SUGGESTION_KEYS: TranslationKey[] = [
 
 export function ClientsRoute() {
   const t = useT()
-  const [mode, setMode] = useState<SearchMode>('semantic')
+  const [mode, setMode] = usePersistentState<SearchMode>(
+    'clients_mode',
+    'semantic',
+    (v): v is SearchMode => v === 'semantic' || v === 'name' || v === 'topics',
+  )
   const [openId, setOpenId] = useState<number | null>(null)
 
   const modeOptions: { value: SearchMode; label: string }[] = [
@@ -175,19 +180,30 @@ function NamePanel({ onPick }: { onPick(telegramId: number): void }) {
 function TopicsPanel({ onPick }: { onPick(telegramId: number): void }) {
   const t = useT()
   const range = useMemo(() => resolveRange('90d'), [])
-  const [selected, setSelected] = useState<string[]>([])
-  const [match, setMatch] = useState<ClientsMatch>('and')
+  const [selected, setSelected] = usePersistentState<string[]>(
+    'client_topic_filters',
+    [],
+    (v) => Array.isArray(v) && v.every((x) => typeof x === 'string'),
+  )
+  const [match, setMatch] = usePersistentState<ClientsMatch>(
+    'client_topic_match',
+    'and',
+    (v): v is ClientsMatch => v === 'and' || v === 'or',
+  )
 
   const { data: topicsData } = useApi<TopicsResponse>('clients|topic-universe', () =>
     fetchTopics({ date_from: range.date_from, date_to: range.date_to }),
   )
   const universe = topicsData?.topics ?? []
 
-  const toggle = useCallback((topic: string) => {
-    setSelected((prev) =>
-      prev.includes(topic) ? prev.filter((x) => x !== topic) : [...prev, topic],
-    )
-  }, [])
+  const toggle = useCallback(
+    (topic: string) => {
+      setSelected((prev) =>
+        prev.includes(topic) ? prev.filter((x) => x !== topic) : [...prev, topic],
+      )
+    },
+    [setSelected],
+  )
 
   const active = selected.length > 0
   const sortedKey = [...selected].sort().join('|')
@@ -476,7 +492,7 @@ function HitCard({ hit, onPick }: { hit: SemanticHit; onPick(): void }) {
           >
             {sentLabel}
           </span>
-          <span className="serif-num text-sm text-brand">{hit.score.toFixed(2)}</span>
+          <span className="serif-num text-sm text-brand-text">{hit.score.toFixed(2)}</span>
           <span className="font-mono text-[11px] text-muted-2">score</span>
         </div>
         <p className="text-[13px] leading-snug text-ink-2">{summary}</p>

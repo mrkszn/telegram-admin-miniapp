@@ -1,7 +1,8 @@
-import type { ComponentType, SVGProps } from 'react'
-import { NavLink } from 'react-router-dom'
+import { useEffect, type ComponentType, type SVGProps } from 'react'
+import { NavLink, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useChatStore } from '@/lib/state/chat-store'
+import { rememberLastTab } from '@/lib/state/view-prefs'
 import { useT, type TranslationKey } from '@/lib/i18n'
 
 export interface NavItem {
@@ -21,6 +22,13 @@ interface BottomNavProps {
 export function BottomNav({ items, className }: BottomNavProps) {
   const t = useT()
   const chatBusy = useChatStore((s) => s.isBusy)
+  const { pathname } = useLocation()
+
+  // Remember the active tab so a restart / root redirect returns here.
+  useEffect(() => {
+    rememberLastTab(pathname)
+  }, [pathname])
+
   return (
     <nav
       className={cn(
@@ -43,7 +51,7 @@ export function BottomNav({ items, className }: BottomNavProps) {
             className={({ isActive }) =>
               cn(
                 'relative flex flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition-colors',
-                isActive ? 'text-brand' : 'text-muted hover:text-ink',
+                isActive ? 'text-brand-text' : 'text-muted hover:text-ink',
               )
             }
           >

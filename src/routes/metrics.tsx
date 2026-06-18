@@ -17,7 +17,8 @@ import { AnimatedBar } from '@/components/feedback/AnimatedBar'
 import { CountUp } from '@/components/feedback/CountUp'
 import { ClientListSheet } from '@/components/clients/ClientListSheet'
 import { useApi } from '@/lib/hooks/useApi'
-import { resolveRange, DEFAULT_PRESET, type DateRangePreset } from '@/lib/date-range'
+import { usePersistentState } from '@/lib/hooks/usePersistentState'
+import { resolveRange, DEFAULT_PRESET, isDateRangePreset, type DateRangePreset } from '@/lib/date-range'
 import {
   fetchMetrics,
   fetchQuestions,
@@ -64,13 +65,24 @@ export function MetricsRoute() {
   const t = useT()
   const { options, loaded } = useMetricKeyOptions()
   const fallbackKey = options[0]?.value ?? DEFAULT_METRIC_KEY
-  // Initialise as null so we can tell "user hasn't picked yet" apart from
-  // "user explicitly picked something". Once the live list arrives we
-  // either inherit the user's pick (if it survived) or pick the first
-  // real key from the backend — never a static placeholder that 404s.
-  const [metricKey, setMetricKey] = useState<string | null>(null)
-  const [preset, setPreset] = useState<DateRangePreset>(DEFAULT_PRESET)
-  const [groupBy, setGroupBy] = useState<GroupBy>('day')
+  // Persist the user's pick across navigation / restart. We seed from
+  // localStorage if available — if the backend later reports that key is
+  // gone the sync below downgrades to the first live key.
+  const [metricKey, setMetricKey] = usePersistentState<string | null>(
+    'selected_metric_key',
+    null,
+    (v) => v === null || typeof v === 'string',
+  )
+  const [preset, setPreset] = usePersistentState<DateRangePreset>(
+    'period',
+    DEFAULT_PRESET,
+    isDateRangePreset,
+  )
+  const [groupBy, setGroupBy] = usePersistentState<GroupBy>(
+    'metrics_group_by',
+    'day',
+    (v): v is GroupBy => v === 'day' || v === 'week',
+  )
 
   // Sync the active key with the live options once they land.
   if (
@@ -184,7 +196,7 @@ function FilterBar({
               onSelect={() => onMetricKeyChange(opt.value)}
               className={cn(
                 'cursor-pointer rounded-tag px-3 py-2 text-sm',
-                opt.value === metricKey && 'bg-brand-soft text-brand-deep',
+                opt.value === metricKey && 'bg-brand-soft font-semibold text-brand-on-soft',
               )}
             >
               {opt.label}
@@ -350,7 +362,11 @@ function EnumView({
 }) {
   const t = useT()
   const lang = useLanguage()
-  const [chartKind, setChartKind] = useState<EnumChartKind>('bar')
+  const [chartKind, setChartKind] = usePersistentState<EnumChartKind>(
+    'chart_type',
+    'bar',
+    (v): v is EnumChartKind => v === 'bar' || v === 'donut',
+  )
   const [value, setValue] = useState<string | null>(null)
   const dist = [...(data.distribution ?? [])].sort((a, b) => b.count - a.count)
   const max = dist[0]?.count ?? 0

@@ -2,6 +2,7 @@ import { Navigate } from 'react-router-dom'
 import { AlertCircle } from 'lucide-react'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { BrandSpinner } from '@/components/feedback/BrandSpinner'
+import { readLastTab } from '@/lib/state/view-prefs'
 import { useT } from '@/lib/i18n'
 
 export function RootRoute() {
@@ -9,7 +10,9 @@ export function RootRoute() {
   const { isReady, isBootstrapping, error } = useAuth()
 
   if (isReady) {
-    return <Navigate to="/dashboard" replace />
+    // Land back on the last visited tab (persisted across restarts), not
+    // always /dashboard.
+    return <Navigate to={readLastTab()} replace />
   }
   if (error) {
     return (

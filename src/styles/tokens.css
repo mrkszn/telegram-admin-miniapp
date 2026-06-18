@@ -66,7 +66,16 @@
   --ink: #0b0b12;
   --ink-2: #2a2a33;
   --muted: #6b6a74;
-  --muted-2: #9a98a1;
+  /* Bumped from #9a98a1 → #76747e so captions/timestamps clear WCAG AA
+     (≥4.5:1) on white surface; the old value sat at ~2.8:1. */
+  --muted-2: #76747e;
+
+  /* Semantic accent text — readable violet *as text*, distinct from the
+     --primary fill. `--accent-text` sits on plain surface/bg, `--accent-on-subtle`
+     sits on the translucent --primary-soft chip background. Light scheme keeps
+     the deep violet (high contrast on light surfaces). */
+  --accent-text: var(--primary-deep);
+  --accent-on-subtle: var(--primary-deep);
 
   --scrim: rgba(11, 11, 18, 0.45);
   color-scheme: light;
@@ -84,10 +93,20 @@
   --ink: #f3f4f8;
   --ink-2: #c5c9d6;
   --muted: #8a90a3;
-  --muted-2: #646b80;
+  /* Bumped from #646b80 → #7d8499 so secondary text clears WCAG AA on the
+     dark surface (#141a27); the old value sat at ~3.3:1. */
+  --muted-2: #7d8499;
 
-  --primary-soft: rgba(168, 85, 247, 0.18);
+  /* Slightly more opaque so the chip background reads as a distinct surface,
+     not a faint wash, in dark. */
+  --primary-soft: rgba(168, 85, 247, 0.22);
   --primary-tint: rgba(124, 58, 237, 0.1);
+
+  /* In dark, the deep violet (#5b21b6) is far too dark to read as text. Use a
+     light violet that clears AA both on plain surface (--accent-text, ~8:1)
+     and on the --primary-soft chip (--accent-on-subtle, ~7:1). */
+  --accent-text: #b9a3ff;
+  --accent-on-subtle: #cdbaff;
 
   --scrim: rgba(2, 4, 10, 0.62);
   color-scheme: dark;

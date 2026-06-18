@@ -12,6 +12,11 @@ export type DateRangePreset = '7d' | '30d' | '90d'
 
 export const DEFAULT_PRESET: DateRangePreset = '7d'
 
+/** Runtime guard — used to validate persisted/untrusted preset values. */
+export function isDateRangePreset(v: unknown): v is DateRangePreset {
+  return v === '7d' || v === '30d' || v === '90d'
+}
+
 /** i18n keys for each preset chip, resolved at render time. */
 export const PRESET_LABEL_KEYS: Record<DateRangePreset, TranslationKey> = {
   '7d': 'dateRange.7d',

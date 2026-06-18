@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { AppShell } from '@/components/layout/AppShell'
 import { BackButton } from '@/components/layout/BackButton'
 import { Message } from '@/components/chat/Message'
+import { AskAiMarker } from '@/components/chat/AskAiMarker'
 import { SentimentChip } from '@/components/sessions/SentimentChip'
 import { BrandSpinner } from '@/components/feedback/BrandSpinner'
 import { ErrorState } from '@/components/feedback/ErrorState'
@@ -100,13 +101,20 @@ function sections(
   const out: Array<{ key: string; title: string; node: React.ReactNode }> = []
 
   if (detail.summary) {
+    const summaryText = detail.summary
     out.push({
       key: 'summary',
       title: t('session.summary'),
       node: (
-        <p className="whitespace-pre-line rounded-card border border-line bg-surface p-3.5 text-[14px] leading-[1.5] text-ink">
-          {detail.summary}
-        </p>
+        <div className="relative rounded-card border border-line bg-surface p-3.5">
+          <p className="whitespace-pre-line pr-9 text-[14px] leading-[1.5] text-ink">
+            {summaryText}
+          </p>
+          <AskAiMarker
+            question={t('askAi.summary', { text: summaryText })}
+            className="absolute right-2 top-2"
+          />
+        </div>
       ),
     })
   }
@@ -150,19 +158,30 @@ function messageRole(m: SessionMessage): 'user' | 'agent' {
 }
 
 function AnswerRow({ answer }: { answer: SessionAnswer }) {
+  const t = useT()
   const marked = coerceText(answer.marked_value)
+  const askText = answer.answer_text ?? marked ?? ''
   return (
-    <div className="rounded-card border border-line bg-surface p-3">
-      <p className="text-[13px] font-medium text-ink">{answer.question_text}</p>
+    <div className="relative rounded-card border border-line bg-surface p-3">
+      <p className="pr-9 text-[13px] font-medium text-ink">{answer.question_text}</p>
       {answer.answer_text ? (
         <p className="mt-1 whitespace-pre-line text-[13px] leading-snug text-ink-2">
           {answer.answer_text}
         </p>
       ) : null}
       {marked ? (
-        <span className="mt-2 inline-flex rounded-tag bg-brand-soft px-2 py-0.5 text-[11px] font-medium text-brand-deep">
+        <span className="mt-2 inline-flex rounded-tag bg-brand-soft px-2 py-0.5 text-[11px] font-semibold text-brand-on-soft">
           {marked}
         </span>
+      ) : null}
+      {askText ? (
+        <AskAiMarker
+          question={t('askAi.answer', {
+            question: answer.question_text,
+            answer: askText,
+          })}
+          className="absolute right-2 top-2"
+        />
       ) : null}
     </div>
   )

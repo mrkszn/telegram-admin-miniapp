@@ -1,4 +1,5 @@
 import { ClientAvatar } from '@/components/clients/ClientAvatar'
+import { AskAiMarker } from '@/components/chat/AskAiMarker'
 import { useT, useLanguage, dateLocale } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import type { ClientRef } from '@/lib/api/types'
@@ -46,40 +47,46 @@ function ClientRow({ client, onPick }: { client: ClientRef; onPick(): void }) {
     : '—'
 
   return (
-    <button
-      type="button"
-      onClick={onPick}
-      className="flex w-full items-center gap-3 rounded-card border border-line bg-surface p-3 text-left transition-colors hover:border-line-strong"
-    >
-      <ClientAvatar name={client.name} telegramId={client.telegram_id} tone={tone} size={40} />
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <div className="flex items-baseline justify-between gap-2">
-          <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">{name}</span>
-          <span className="shrink-0 whitespace-nowrap font-mono text-[11.5px] text-muted-2">
-            {last}
-          </span>
-        </div>
-        <div className="flex items-center gap-2 text-[12px] text-muted">
-          <span>
-            {client.sessions_count} {t('clients.list.sessions')}
-          </span>
-          {client.avg_sentiment != null ? (
-            <span
-              className={cn(
-                'font-mono',
-                tone === 'positive'
-                  ? 'text-success'
-                  : tone === 'negative'
-                    ? 'text-danger'
-                    : 'text-muted-2',
-              )}
-            >
-              {client.avg_sentiment > 0 ? '+' : ''}
-              {client.avg_sentiment.toFixed(2)}
+    <div className="relative flex items-center gap-1">
+      <button
+        type="button"
+        onClick={onPick}
+        className="flex flex-1 items-center gap-3 rounded-card border border-line bg-surface p-3 pr-10 text-left transition-colors hover:border-line-strong"
+      >
+        <ClientAvatar name={client.name} telegramId={client.telegram_id} tone={tone} size={40} />
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">{name}</span>
+            <span className="shrink-0 whitespace-nowrap font-mono text-[11.5px] text-muted-2">
+              {last}
             </span>
-          ) : null}
+          </div>
+          <div className="flex items-center gap-2 text-[12px] text-muted">
+            <span>
+              {client.sessions_count} {t('clients.list.sessions')}
+            </span>
+            {client.avg_sentiment != null ? (
+              <span
+                className={cn(
+                  'font-mono',
+                  tone === 'positive'
+                    ? 'text-success'
+                    : tone === 'negative'
+                      ? 'text-danger'
+                      : 'text-muted-2',
+                )}
+              >
+                {client.avg_sentiment > 0 ? '+' : ''}
+                {client.avg_sentiment.toFixed(2)}
+              </span>
+            ) : null}
+          </div>
         </div>
-      </div>
-    </button>
+      </button>
+      <AskAiMarker
+        question={t('askAi.client', { name })}
+        className="absolute right-2 top-1/2 -translate-y-1/2"
+      />
+    </div>
   )
 }

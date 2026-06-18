@@ -11,7 +11,8 @@ import { ErrorState } from '@/components/feedback/ErrorState'
 import { Skeleton } from '@/components/feedback/Skeleton'
 import { CountUp } from '@/components/feedback/CountUp'
 import { useApi } from '@/lib/hooks/useApi'
-import { resolveRange, DEFAULT_PRESET, type DateRangePreset } from '@/lib/date-range'
+import { usePersistentState } from '@/lib/hooks/usePersistentState'
+import { resolveRange, DEFAULT_PRESET, isDateRangePreset, type DateRangePreset } from '@/lib/date-range'
 import { fetchOverview, fetchSessions, type DateRange } from '@/lib/api/admin'
 import { useT, type Translator } from '@/lib/i18n'
 import type { OverviewResponse, SessionSentiment, TopicCount } from '@/lib/api/types'
@@ -68,7 +69,11 @@ function mergedTopics(o: OverviewResponse): TopicCount[] {
 
 export function DashboardRoute() {
   const t = useT()
-  const [preset, setPreset] = useState<DateRangePreset>(DEFAULT_PRESET)
+  const [preset, setPreset] = usePersistentState<DateRangePreset>(
+    'period',
+    DEFAULT_PRESET,
+    isDateRangePreset,
+  )
   const range = useMemo(() => resolveRange(preset), [preset])
   const key = `overview|${range.date_from}|${range.date_to}`
 

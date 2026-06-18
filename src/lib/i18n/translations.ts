@@ -107,10 +107,6 @@ export const uk = {
   'topics.table.topic': 'Тема',
   'topics.table.sentiment': 'Sentiment',
   'topics.table.count': 'К-сть',
-  'topics.mentions.title': 'Згадки',
-  'topics.mentions.next': 'Наступна ітерація',
-  'topics.mentions.body':
-    'Підключення до семантичного пошуку за темами — у наступному релізі. Поки що використовуйте «Клієнти» та «Чат».',
 
   // metrics ---------------------------------------------------
   'metrics.selectMetric': 'Вибрати метрику',
@@ -234,6 +230,17 @@ export const uk = {
 
   // metrics drill-down ---------------------------------------
   'metrics.byCategory': ({ label }: TranslationParams) => `Клієнти за метрикою «${label}»`,
+
+  // ask-AI markers -------------------------------------------
+  'askAi.aria': 'Запитати ШІ',
+  'askAi.topic': ({ topic }: TranslationParams) =>
+    `Проаналізуй відгуки за темою «${topic}»`,
+  'askAi.client': ({ name }: TranslationParams) =>
+    `Покажи і проаналізуй історію клієнта ${name}`,
+  'askAi.answer': ({ question, answer }: TranslationParams) =>
+    `Що означає цей фідбек на питання «${question}»: ${answer}`,
+  'askAi.summary': ({ text }: TranslationParams) =>
+    `Що означає цей фідбек: ${text}`,
 } satisfies Record<string, TranslationEntry>
 
 export type TranslationKey = keyof typeof uk
@@ -310,10 +317,6 @@ export const en: Record<TranslationKey, TranslationEntry> = {
   'topics.table.topic': 'Topic',
   'topics.table.sentiment': 'Sentiment',
   'topics.table.count': 'Count',
-  'topics.mentions.title': 'Mentions',
-  'topics.mentions.next': 'Next iteration',
-  'topics.mentions.body':
-    'Semantic search over topics is coming in the next release. For now, use “Clients” and “Chat”.',
 
   'metrics.selectMetric': 'Select metric',
   'metrics.groupBy.aria': 'Grouping',
@@ -425,6 +428,16 @@ export const en: Record<TranslationKey, TranslationEntry> = {
   'dashboard.drill.negativeSessions': 'View negative sessions',
 
   'metrics.byCategory': ({ label }: TranslationParams) => `Clients for metric “${label}”`,
+
+  'askAi.aria': 'Ask AI',
+  'askAi.topic': ({ topic }: TranslationParams) =>
+    `Analyse feedback on the topic “${topic}”`,
+  'askAi.client': ({ name }: TranslationParams) =>
+    `Show and analyse the history of client ${name}`,
+  'askAi.answer': ({ question, answer }: TranslationParams) =>
+    `What does this feedback to the question “${question}” mean: ${answer}`,
+  'askAi.summary': ({ text }: TranslationParams) =>
+    `What does this feedback mean: ${text}`,
 }
 
 export const translations: Record<Language, Record<TranslationKey, TranslationEntry>> = {
