@@ -114,6 +114,18 @@ export interface QuestionsResponse {
   questions: Question[]
 }
 
+// --- settings -----------------------------------------------
+export type SettingsTheme = 'light' | 'dark' | 'system'
+export type SettingsLanguage = 'ru' | 'en'
+
+export interface AdminSettings {
+  theme: SettingsTheme
+  language: SettingsLanguage
+  notifications_enabled: boolean
+}
+/** PUT /admin/settings accepts a partial update. */
+export type AdminSettingsUpdate = Partial<AdminSettings>
+
 // --- ask (admin chat) ---------------------------------------
 export interface AskHistoryItem {
   role: 'user' | 'assistant'

@@ -10,6 +10,8 @@
 import type { AxiosInstance } from 'axios'
 import { api } from './client'
 import type {
+  AdminSettings,
+  AdminSettingsUpdate,
   AskRequest,
   AskResponse,
   ClientProfileResponse,
@@ -107,5 +109,19 @@ export async function askAdmin(
   override?: AxiosInstance,
 ): Promise<AskResponse> {
   const { data } = await client(override).post<AskResponse>('/admin/ask', body)
+  return data
+}
+
+export async function fetchSettings(override?: AxiosInstance): Promise<AdminSettings> {
+  const { data } = await client(override).get<AdminSettings>('/admin/settings')
+  return data
+}
+
+/** Partial update — only the changed keys need to be sent. */
+export async function updateSettings(
+  patch: AdminSettingsUpdate,
+  override?: AxiosInstance,
+): Promise<AdminSettings> {
+  const { data } = await client(override).put<AdminSettings>('/admin/settings', patch)
   return data
 }

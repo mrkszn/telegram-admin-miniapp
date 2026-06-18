@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils'
 import { Header } from './Header'
 import { BottomNav, type NavItem } from './BottomNav'
 import { ThemeToggle } from './ThemeToggle'
+import { SettingsButton } from './SettingsButton'
 
 interface AppShellProps {
   title: ReactNode
@@ -11,7 +12,7 @@ interface AppShellProps {
   navItems: NavItem[]
   headerLeft?: ReactNode
   /**
-   * Right header slot. Default = <ThemeToggle/> (auto/light/dark cycler).
+   * Right header slot. Default = gear (→ /settings) + <ThemeToggle/>.
    * Pass an explicit element to override; pass `null` to hide.
    */
   headerRight?: ReactNode
@@ -31,7 +32,15 @@ export function AppShell({
   contentClassName,
 }: AppShellProps) {
   const showNav = navItems.length > 0
-  const resolvedRight = headerRight === undefined ? <ThemeToggle /> : headerRight
+  const resolvedRight =
+    headerRight === undefined ? (
+      <div className="flex items-center">
+        <SettingsButton />
+        <ThemeToggle />
+      </div>
+    ) : (
+      headerRight
+    )
   return (
     <div
       className={cn(
