@@ -6,14 +6,17 @@
  * deterministic per render.
  */
 
+import type { TranslationKey } from '@/lib/i18n'
+
 export type DateRangePreset = '7d' | '30d' | '90d'
 
 export const DEFAULT_PRESET: DateRangePreset = '7d'
 
-export const PRESET_LABELS: Record<DateRangePreset, string> = {
-  '7d': '7 дней',
-  '30d': '30 дней',
-  '90d': '90 дней',
+/** i18n keys for each preset chip, resolved at render time. */
+export const PRESET_LABEL_KEYS: Record<DateRangePreset, TranslationKey> = {
+  '7d': 'dateRange.7d',
+  '30d': 'dateRange.30d',
+  '90d': 'dateRange.90d',
 }
 
 export interface ResolvedRange {

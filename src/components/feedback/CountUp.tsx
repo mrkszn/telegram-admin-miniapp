@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { numberLocale, useLanguage } from '@/lib/i18n'
 
 interface CountUpProps {
   /** Target number. The component animates from 0 (or `from`) to this. */
@@ -11,7 +12,7 @@ interface CountUpProps {
   delayMs?: number
   /** Number of fraction digits to display (default = inferred from `to`). */
   fractionDigits?: number
-  /** ru-RU thousands separator on by default. */
+  /** Override the number locale (defaults to the active UI language). */
   locale?: string
   /** Optional prefix (e.g. `+` for positive deltas). */
   prefix?: string
@@ -50,11 +51,13 @@ export function CountUp({
   durationMs = 800,
   delayMs = 0,
   fractionDigits,
-  locale = 'ru-RU',
+  locale,
   prefix,
   suffix,
   className,
 }: CountUpProps) {
+  const lang = useLanguage()
+  const resolvedLocale = locale ?? numberLocale(lang)
   const digits = fractionDigits ?? inferFractionDigits(to)
   const [value, setValue] = useState<number>(() => {
     // Initialise at `from` so the very first paint isn't already the
@@ -104,11 +107,11 @@ export function CountUp({
     return () => cancelAnimationFrame(raf)
   }, [to, durationMs, delayMs])
 
-  const formatted = value.toLocaleString(locale, {
+  const formatted = value.toLocaleString(resolvedLocale, {
     minimumFractionDigits: digits,
     maximumFractionDigits: digits,
   })
-  const finalFormatted = to.toLocaleString(locale, {
+  const finalFormatted = to.toLocaleString(resolvedLocale, {
     minimumFractionDigits: digits,
     maximumFractionDigits: digits,
   })

@@ -6,41 +6,20 @@ import { SegmentedControl } from '@/components/ui/segmented'
 import { BrandSpinner } from '@/components/feedback/BrandSpinner'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { useApi } from '@/lib/hooks/useApi'
-import {
-  useThemePreference,
-  type ThemePreference,
-} from '@/lib/hooks/useThemePreference'
+import { useT, setLanguage } from '@/lib/i18n'
 import { fetchSettings, updateSettings } from '@/lib/api/admin'
 import type {
   AdminSettings,
   AdminSettingsUpdate,
   ApiError,
   SettingsLanguage,
-  SettingsTheme,
 } from '@/lib/api/types'
 import { ADMIN_NAV } from './nav'
-
-/* ── theme <→ local-preference mapping ───────────────────────
- * Backend uses 'system'; the app-wide theme store uses 'auto'.
- * Everything else maps 1:1. */
-function themeToPreference(theme: SettingsTheme): ThemePreference {
-  return theme === 'system' ? 'auto' : theme
-}
-
-const THEME_OPTIONS: { value: SettingsTheme; label: string }[] = [
-  { value: 'system', label: 'Системная' },
-  { value: 'light', label: 'Светлая' },
-  { value: 'dark', label: 'Тёмная' },
-]
-
-const LANGUAGE_OPTIONS: { value: SettingsLanguage; label: string }[] = [
-  { value: 'ru', label: 'Русский' },
-  { value: 'en', label: 'English' },
-]
 
 /* ── route ──────────────────────────────────────────────── */
 
 export function SettingsRoute() {
+  const t = useT()
   const navigate = useNavigate()
   const goBack = useCallback(() => navigate('/dashboard'), [navigate])
 
@@ -51,7 +30,7 @@ export function SettingsRoute() {
 
   return (
     <AppShell
-      title="Настройки"
+      title={t('title.settings')}
       navItems={ADMIN_NAV}
       headerRight={null}
       onBack={goBack}
@@ -62,7 +41,7 @@ export function SettingsRoute() {
           <ErrorState onRetry={() => void refetch()} />
         ) : isLoading || !data ? (
           <div className="flex justify-center py-16">
-            <BrandSpinner size="lg" label="Загрузка настроек…" />
+            <BrandSpinner size="lg" label={t('settings.loading')} />
           </div>
         ) : (
           <SettingsForm initial={data} />
@@ -75,59 +54,54 @@ export function SettingsRoute() {
 /* ── form ───────────────────────────────────────────────── */
 
 function SettingsForm({ initial }: { initial: AdminSettings }) {
+  const t = useT()
   const [settings, setSettings] = useState<AdminSettings>(initial)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<ApiError | null>(null)
-  const { setPreference } = useThemePreference()
+
+  const languageOptions: { value: SettingsLanguage; label: string }[] = [
+    { value: 'uk', label: t('settings.language.uk') },
+    { value: 'en', label: t('settings.language.en') },
+  ]
 
   /**
    * Optimistically apply `patch`, PUT it, then reconcile with the server's
    * canonical response. On failure we roll back to the previous values and
-   * surface the error inline.
+   * surface the error inline. Language is mirrored into the i18n store
+   * immediately so the whole UI re-translates the instant the user taps.
    */
   const save = useCallback(
     async (patch: AdminSettingsUpdate) => {
       const previous = settings
       const optimistic = { ...settings, ...patch }
       setSettings(optimistic)
+      if (patch.language !== undefined) setLanguage(patch.language)
       setSaving(true)
       setSaveError(null)
       try {
         const fresh = await updateSettings(patch)
         setSettings(fresh)
-        // Keep the live app theme in sync with the saved value.
-        if (patch.theme !== undefined) {
-          setPreference(themeToPreference(fresh.theme))
-        }
+        setLanguage(fresh.language)
       } catch (err) {
         setSettings(previous)
+        setLanguage(previous.language)
         setSaveError(err as ApiError)
       } finally {
         setSaving(false)
       }
     },
-    [settings, setPreference],
+    [settings],
   )
 
   return (
     <>
       <Section
-        title="Тема"
-        description="Как приложение выглядит. «Системная» следует настройкам Telegram."
+        title={t('settings.language.title')}
+        description={t('settings.language.description')}
       >
         <SegmentedControl
-          label="Тема оформления"
-          options={THEME_OPTIONS}
-          value={settings.theme}
-          onChange={(theme) => void save({ theme })}
-          disabled={saving}
-        />
-      </Section>
-
-      <Section title="Язык" description="Язык интерфейса.">
-        <SegmentedControl
-          label="Язык интерфейса"
-          options={LANGUAGE_OPTIONS}
+          label={t('settings.language.aria')}
+          options={languageOptions}
           value={settings.language}
           onChange={(language) => void save({ language })}
           disabled={saving}
@@ -136,11 +110,9 @@ function SettingsForm({ initial }: { initial: AdminSettings }) {
 
       <div className="min-h-5 text-xs" aria-live="polite">
         {saving ? (
-          <span className="text-muted">Сохранение…</span>
+          <span className="text-muted">{t('settings.saving')}</span>
         ) : saveError ? (
-          <span className="text-danger">
-            Не удалось сохранить. Изменения отменены.
-          </span>
+          <span className="text-danger">{t('settings.saveError')}</span>
         ) : null}
       </div>
     </>

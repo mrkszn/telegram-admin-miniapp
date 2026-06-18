@@ -2,10 +2,12 @@ import type { ComponentType, SVGProps } from 'react'
 import { NavLink } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useChatStore } from '@/lib/state/chat-store'
+import { useT, type TranslationKey } from '@/lib/i18n'
 
 export interface NavItem {
   to: string
-  label: string
+  /** i18n key resolved at render time. */
+  label: TranslationKey
   icon: ComponentType<SVGProps<SVGSVGElement>>
   /** Treat the path as the section root; matches `to` exactly. */
   end?: boolean
@@ -17,6 +19,7 @@ interface BottomNavProps {
 }
 
 export function BottomNav({ items, className }: BottomNavProps) {
+  const t = useT()
   const chatBusy = useChatStore((s) => s.isBusy)
   return (
     <nav
@@ -24,12 +27,12 @@ export function BottomNav({ items, className }: BottomNavProps) {
         'sticky bottom-0 z-30 flex h-nav items-stretch justify-around border-t border-line bg-bg/90 backdrop-blur-md pb-safe-bottom',
         className,
       )}
-      aria-label="Основная навигация"
+      aria-label={t('nav.aria')}
     >
       {items.map((item) => {
         // Currently only the chat path is "background-busy" aware: when the
         // user fired off a question and navigated away, we surface a small
-        // pulsing brand dot on top of the Чат tab so they remember it's
+        // pulsing brand dot on top of the chat tab so they remember it's
         // still cooking.
         const showBusyDot = chatBusy && item.to === '/ask'
         return (
@@ -54,7 +57,7 @@ export function BottomNav({ items, className }: BottomNavProps) {
                   />
                   {showBusyDot ? (
                     <span
-                      aria-label="Агент готовит ответ"
+                      aria-label={t('nav.agentBusy')}
                       className="absolute -right-0.5 -top-0.5 inline-flex h-2 w-2"
                     >
                       <span className="animate-brand-pulse absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />
@@ -62,7 +65,7 @@ export function BottomNav({ items, className }: BottomNavProps) {
                     </span>
                   ) : null}
                 </div>
-                <span className="leading-none">{item.label}</span>
+                <span className="leading-none">{t(item.label)}</span>
               </>
             )}
           </NavLink>

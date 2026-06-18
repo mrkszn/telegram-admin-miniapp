@@ -46,9 +46,9 @@ export function BarChartCard<T extends Record<string, unknown>>({
         showLegend={categories.length > 1}
         showAnimation
         animationDuration={700}
-        // Vertical bars need a wider y-axis to fit Cyrillic category names
-        // — defaulting to 36 px clips at "Меньше м…". Horizontal bars only
-        // need numeric ticks, so the original 36 is fine.
+        // Vertical bars need a wider y-axis to fit long category names
+        // — defaulting to 36 px clips them. Horizontal bars only need
+        // numeric ticks, so the original 36 is fine.
         yAxisWidth={layout === 'vertical' ? 120 : 36}
         style={{ height }}
       />

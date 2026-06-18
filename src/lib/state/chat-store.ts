@@ -3,6 +3,7 @@ import { createJSONStorage, persist } from 'zustand/middleware'
 import { askAdmin } from '@/lib/api/admin'
 import { bootstrapAuth } from '@/lib/telegram/auth'
 import { toApiError } from '@/lib/api/client'
+import { getLanguage, translate } from '@/lib/i18n'
 import type { AskHistoryItem, AskResponse } from '@/lib/api/types'
 
 /**
@@ -109,7 +110,7 @@ export const useChatStore = create<ChatState>()(
         } catch (err) {
           const apiErr = toApiError(err)
           set({
-            error: apiErr.message || 'Не удалось получить ответ.',
+            error: apiErr.message || translate(getLanguage(), 'ask.failed'),
             isBusy: false,
           })
         }

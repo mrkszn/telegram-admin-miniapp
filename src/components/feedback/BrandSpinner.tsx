@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n'
 
 /**
  * Brand loading spinner. SVG ring with a sweep arc in the cyan→violet
@@ -25,6 +26,7 @@ const SIZE: Record<NonNullable<BrandSpinnerProps['size']>, number> = {
 }
 
 export function BrandSpinner({ size = 'md', className, label }: BrandSpinnerProps) {
+  const t = useT()
   const px = SIZE[size]
   const stroke = size === 'sm' ? 2 : size === 'md' ? 2.5 : 3
   const radius = (px - stroke) / 2
@@ -33,7 +35,7 @@ export function BrandSpinner({ size = 'md', className, label }: BrandSpinnerProp
   return (
     <div
       role="status"
-      aria-label={label ?? 'Загрузка'}
+      aria-label={label ?? t('common.loading')}
       className={cn('inline-flex flex-col items-center gap-2', className)}
     >
       <span className="relative inline-flex" style={{ width: px, height: px }}>

@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils'
-import { PRESET_LABELS, type DateRangePreset } from '@/lib/date-range'
+import { PRESET_LABEL_KEYS, type DateRangePreset } from '@/lib/date-range'
+import { useT } from '@/lib/i18n'
 
 interface DateRangeChipsProps {
   value: DateRangePreset
@@ -10,10 +11,11 @@ interface DateRangeChipsProps {
 const PRESETS: DateRangePreset[] = ['7d', '30d', '90d']
 
 export function DateRangeChips({ value, onChange, className }: DateRangeChipsProps) {
+  const t = useT()
   return (
     <div
       role="tablist"
-      aria-label="Период"
+      aria-label={t('dateRange.aria')}
       className={cn('flex gap-2 overflow-x-auto pb-1', className)}
     >
       {PRESETS.map((preset) => {
@@ -32,7 +34,7 @@ export function DateRangeChips({ value, onChange, className }: DateRangeChipsPro
                 : 'border-line bg-surface text-muted hover:border-line-strong hover:text-ink',
             )}
           >
-            {PRESET_LABELS[preset]}
+            {t(PRESET_LABEL_KEYS[preset])}
           </button>
         )
       })}

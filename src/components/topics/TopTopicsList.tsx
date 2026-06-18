@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils'
 import { AnimatedBar } from '@/components/feedback/AnimatedBar'
 import { CountUp } from '@/components/feedback/CountUp'
+import { useT } from '@/lib/i18n'
 import type { TopicCount } from '@/lib/api/types'
 
 interface TopTopicsListProps {
@@ -24,13 +25,14 @@ export function TopTopicsList({
   topics,
   tone,
   limit = 5,
-  emptyHint = 'Нет данных',
+  emptyHint,
 }: TopTopicsListProps) {
+  const t = useT()
   const items = topics.slice(0, limit)
   if (items.length === 0) {
     return (
       <div className="card-shell">
-        <p className="text-sm text-muted">{emptyHint}</p>
+        <p className="text-sm text-muted">{emptyHint ?? t('common.noData')}</p>
       </div>
     )
   }

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n'
 
 interface HeaderProps {
   title: ReactNode
@@ -14,6 +15,7 @@ interface HeaderProps {
 }
 
 export function Header({ title, left, right, onBack, className }: HeaderProps) {
+  const t = useT()
   return (
     <header
       className={cn(
@@ -27,7 +29,7 @@ export function Header({ title, left, right, onBack, className }: HeaderProps) {
             <button
               type="button"
               onClick={onBack}
-              aria-label="Назад"
+              aria-label={t('header.back')}
               className="-ml-2 inline-flex h-9 w-9 items-center justify-center rounded-tag text-ink transition-colors hover:bg-surface-2"
             >
               <ArrowLeft className="h-5 w-5" strokeWidth={1.75} />

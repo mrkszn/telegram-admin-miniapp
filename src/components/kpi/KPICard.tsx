@@ -74,16 +74,16 @@ export function KPICard({
         // No mid-word break, no layout change, no manual font reduction —
         // we use container queries (1cqw = 1% of the parent card width)
         // so the font-size auto-fits whatever text comes in. Short values
-        // like «30» or «-0.17» stay at the design's --kpi-size (30 px),
-        // long Russian words like «нейтрально» quietly shrink to fit on
-        // a single line without forcing the «нейтраль/но» hyphenation
-        // that ‎the previous build showed.
+        // like "30" or "-0.17" stay at the design's --kpi-size (30 px),
+        // long sentiment words (e.g. "neutral" / "нейтрально") quietly
+        // shrink to fit on a single line without forcing hyphenation
+        // that the previous build showed.
         className="serif-num whitespace-nowrap leading-tight text-ink"
         style={{
           // clamp(min, dynamic, max): on a ~165 px card the dynamic term
-          // gives ~24 px (small enough for «нейтрально» to fit one line);
-          // on roomier cards it climbs to --kpi-size (30 px) for «30 %» /
-          // «-0.17» etc.
+          // gives ~24 px (small enough for a long sentiment word to fit one
+          // line); on roomier cards it climbs to --kpi-size (30 px) for
+          // "30 %" / "-0.17" etc.
           fontSize: 'clamp(1.125rem, calc(12cqi + 0.25rem), var(--kpi-size))',
         }}
       >

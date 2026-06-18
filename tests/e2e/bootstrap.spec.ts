@@ -74,6 +74,6 @@ test('bootstraps auth and renders /dashboard', async ({ page, context }) => {
 
   await page.goto('/')
   await expect(page).toHaveURL(/\/dashboard$/, { timeout: 10_000 })
-  await expect(page.getByRole('heading', { name: 'Сводка' })).toBeVisible()
-  await expect(page.getByRole('navigation', { name: 'Основная навигация' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Зведення' })).toBeVisible()
+  await expect(page.getByRole('navigation', { name: 'Основна навігація' })).toBeVisible()
 })

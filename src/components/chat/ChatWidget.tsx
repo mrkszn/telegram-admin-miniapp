@@ -9,6 +9,7 @@ import {
 } from 'react'
 import { SendHorizonal } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n'
 import { Message, type MessageProps } from './Message'
 
 export interface ChatMessage extends MessageProps {
@@ -31,9 +32,10 @@ export interface ChatWidgetHandle {
 }
 
 export const ChatWidget = forwardRef<ChatWidgetHandle, ChatWidgetProps>(function ChatWidget(
-  { messages, onSubmit, placeholder = 'Сообщение…', isBusy = false, className, emptyState },
+  { messages, onSubmit, placeholder, isBusy = false, className, emptyState },
   ref,
 ) {
+  const t = useT()
   const [value, setValue] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -91,14 +93,14 @@ export const ChatWidget = forwardRef<ChatWidgetHandle, ChatWidgetProps>(function
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={onKey}
           rows={1}
-          placeholder={placeholder}
+          placeholder={placeholder ?? t('chat.placeholder')}
           disabled={isBusy}
-          aria-label="Сообщение"
+          aria-label={t('chat.message.aria')}
           className="max-h-32 flex-1 resize-none rounded-input border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-muted-2 focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
         />
         <button
           type="submit"
-          aria-label="Отправить"
+          aria-label={t('chat.send')}
           disabled={isBusy || value.trim().length === 0}
           className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-input bg-brand text-brand-on transition-colors hover:bg-brand-hover disabled:opacity-40"
         >

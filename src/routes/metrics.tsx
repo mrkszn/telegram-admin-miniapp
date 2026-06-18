@@ -25,6 +25,7 @@ import {
   type MetricKeyOption,
 } from '@/lib/metric-keys'
 import { cn } from '@/lib/utils'
+import { useT, useLanguage, numberLocale } from '@/lib/i18n'
 import type { MetricsResponse, QuestionsResponse } from '@/lib/api/types'
 import { ADMIN_NAV } from './nav'
 
@@ -54,6 +55,7 @@ function useMetricKeyOptions(): MetricKeyOptionsState {
 }
 
 export function MetricsRoute() {
+  const t = useT()
   const { options, loaded } = useMetricKeyOptions()
   const fallbackKey = options[0]?.value ?? DEFAULT_METRIC_KEY
   // Initialise as null so we can tell "user hasn't picked yet" apart from
@@ -98,7 +100,7 @@ export function MetricsRoute() {
   const isNumber = data?.expected_type === 'number'
 
   return (
-    <AppShell title="Метрики" navItems={ADMIN_NAV}>
+    <AppShell title={t('title.metrics')} navItems={ADMIN_NAV}>
       <div className="flex flex-col gap-4">
         <FilterBar
           metricKey={displayKey}
@@ -150,6 +152,7 @@ function FilterBar({
   onGroupByChange,
   showGroupBy,
 }: FilterBarProps) {
+  const t = useT()
   const currentLabel = labelFor(metricKey, options)
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -157,7 +160,7 @@ function FilterBar({
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            aria-label="Выбрать метрику"
+            aria-label={t('metrics.selectMetric')}
             className="inline-flex h-8 max-w-[200px] items-center gap-1.5 truncate rounded-full border border-line bg-surface px-3 text-xs font-medium text-ink"
           >
             <span className="truncate">{currentLabel}</span>
@@ -194,14 +197,15 @@ function GroupByToggle({
   value: GroupBy
   onChange(next: GroupBy): void
 }) {
+  const t = useT()
   const options: Array<{ value: GroupBy; label: string }> = [
-    { value: 'day', label: 'День' },
-    { value: 'week', label: 'Неделя' },
+    { value: 'day', label: t('metrics.groupBy.day') },
+    { value: 'week', label: t('metrics.groupBy.week') },
   ]
   return (
     <div
       role="group"
-      aria-label="Группировка"
+      aria-label={t('metrics.groupBy.aria')}
       className="ml-auto inline-flex rounded-full border border-line bg-surface p-0.5"
     >
       {options.map((o) => {
@@ -228,32 +232,33 @@ function GroupByToggle({
 /* ── views ──────────────────────────────────────────────── */
 
 function MetricView({ data, label }: { data: MetricsResponse; label: string }) {
+  const t = useT()
   switch (data.expected_type) {
     case 'unknown':
-      return <EmptyCard message={`Метрика «${label}» не найдена.`} />
+      return <EmptyCard message={t('metrics.notFound', { label })} />
     case 'text':
-      return (
-        <EmptyCard message="Текстовая метрика — используйте «Топики» или «Клиенты» для анализа." />
-      )
+      return <EmptyCard message={t('metrics.textMetric')} />
     case 'number': {
       const points = data.points ?? []
       if (points.length === 0)
-        return <EmptyCard message={`По метрике «${label}» данных за период нет.`} />
+        return <EmptyCard message={t('metrics.noDataForMetric', { label })} />
       return <NumberView data={data} label={label} />
     }
     case 'enum':
     case 'boolean': {
       const dist = data.distribution ?? []
       if (dist.length === 0)
-        return <EmptyCard message={`По метрике «${label}» данных за период нет.`} />
+        return <EmptyCard message={t('metrics.noDataForMetric', { label })} />
       return <EnumView data={data} label={label} />
     }
     default:
-      return <EmptyCard message="Неподдерживаемый тип метрики." />
+      return <EmptyCard message={t('metrics.unsupported')} />
   }
 }
 
 function NumberView({ data, label }: { data: MetricsResponse; label: string }) {
+  const t = useT()
+  const lang = useLanguage()
   const points = data.points ?? []
   const chartData = points.map((p) => ({
     bucket: p.bucket,
@@ -261,9 +266,9 @@ function NumberView({ data, label }: { data: MetricsResponse; label: string }) {
   }))
   const avgs = points.map((p) => p.avg ?? 0)
   const overall = avgs.length > 0 ? avgs.reduce((s, v) => s + v, 0) / avgs.length : 0
-  const overallFmt = overall
-    .toLocaleString('ru-RU', { maximumFractionDigits: 2 })
-    .replace('.', ',')
+  const overallFmt = overall.toLocaleString(numberLocale(lang), {
+    maximumFractionDigits: 2,
+  })
 
   return (
     <div className="flex flex-col gap-4">
@@ -271,10 +276,10 @@ function NumberView({ data, label }: { data: MetricsResponse; label: string }) {
         title={
           <span className="flex items-baseline gap-2">
             <span className="serif-num text-4xl leading-none">{overallFmt}</span>
-            <span className="font-mono text-xs text-muted">ср. за период</span>
+            <span className="font-mono text-xs text-muted">{t('metrics.avgForPeriod')}</span>
           </span>
         }
-        subtitle={`Среднее по метрике «${label}»`}
+        subtitle={t('metrics.avgByMetric', { label })}
         data={chartData}
         index="bucket"
         categories={['avg']}
@@ -286,13 +291,13 @@ function NumberView({ data, label }: { data: MetricsResponse; label: string }) {
       <section className="flex flex-col gap-2">
         <header className="flex items-baseline gap-2">
           <span className="serif-num text-base text-muted-2">01</span>
-          <h2 className="font-serif text-lg italic">Значения по дням</h2>
+          <h2 className="font-serif text-lg italic">{t('metrics.valuesByDay')}</h2>
         </header>
         <div className="overflow-hidden rounded-card border border-line bg-surface">
           <div className="flex items-center bg-surface-2 px-3.5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-muted">
-            <span className="flex-1">День</span>
-            <span className="w-[70px] text-right">Среднее</span>
-            <span className="w-[60px] text-right">Кол-во</span>
+            <span className="flex-1">{t('metrics.table.day')}</span>
+            <span className="w-[70px] text-right">{t('metrics.table.avg')}</span>
+            <span className="w-[60px] text-right">{t('metrics.table.count')}</span>
           </div>
           {points.map((p) => (
             <div
@@ -317,6 +322,8 @@ function NumberView({ data, label }: { data: MetricsResponse; label: string }) {
 type EnumChartKind = 'bar' | 'donut'
 
 function EnumView({ data, label }: { data: MetricsResponse; label: string }) {
+  const t = useT()
+  const lang = useLanguage()
   const [chartKind, setChartKind] = useState<EnumChartKind>('bar')
   const dist = [...(data.distribution ?? [])].sort((a, b) => b.count - a.count)
   const max = dist[0]?.count ?? 0
@@ -327,12 +334,12 @@ function EnumView({ data, label }: { data: MetricsResponse; label: string }) {
   const sharedTitle = (
     <span className="flex items-baseline gap-2">
       <span className="serif-num text-3xl leading-none">
-        {total.toLocaleString('ru-RU')}
+        {total.toLocaleString(numberLocale(lang))}
       </span>
-      <span className="font-mono text-xs text-muted">значений</span>
+      <span className="font-mono text-xs text-muted">{t('metrics.values')}</span>
     </span>
   )
-  const sharedSubtitle = `Распределение по метрике «${label}»`
+  const sharedSubtitle = t('metrics.distributionByMetric', { label })
 
   return (
     <div className="flex flex-col gap-4">
@@ -348,8 +355,8 @@ function EnumView({ data, label }: { data: MetricsResponse; label: string }) {
           colors={['violet']}
           // Vertical layout keeps every category label visible on the y-axis
           // — horizontal layout was dropping every other label on narrow
-          // 375 px Telegram screens, leaving only "Первый раз" / "Меньше
-          // месяца" out of five categories.
+          // 375 px Telegram screens, leaving only a couple of the five
+          // categories visible.
           layout="vertical"
           // Taller canvas so 5+ rows fit comfortably with the rotated layout.
           height={32 + chartData.length * 36}
@@ -361,21 +368,21 @@ function EnumView({ data, label }: { data: MetricsResponse; label: string }) {
           data={chartData}
           index="value"
           category="count"
-          centerCaption="всего"
+          centerCaption={t('metrics.donutCenter')}
           height={210}
         />
       )}
 
       <div className="flex items-center justify-between gap-3 text-sm text-muted">
         <span>
-          Всего:{' '}
+          {t('metrics.total')}{' '}
           <span className="serif-num text-base text-ink">
             <CountUp to={total} durationMs={900} />
           </span>
         </span>
         {unknown > 0 ? (
           <span>
-            Не определено:{' '}
+            {t('metrics.undefined')}{' '}
             <span className="serif-num text-base text-ink">
               <CountUp to={unknown} durationMs={900} delayMs={120} />
             </span>
@@ -386,7 +393,7 @@ function EnumView({ data, label }: { data: MetricsResponse; label: string }) {
       <section className="flex flex-col gap-2">
         <header className="flex items-baseline gap-2">
           <span className="serif-num text-base text-muted-2">01</span>
-          <h2 className="font-serif text-lg italic">Категории</h2>
+          <h2 className="font-serif text-lg italic">{t('metrics.categories')}</h2>
         </header>
         <div className="overflow-hidden rounded-card border border-line bg-surface">
           {dist.map((d, i) => (
@@ -434,14 +441,15 @@ function EnumChartKindToggle({
   value: EnumChartKind
   onChange(next: EnumChartKind): void
 }) {
+  const t = useT()
   const options: Array<{ value: EnumChartKind; label: string; Icon: LucideIcon }> = [
-    { value: 'bar', label: 'Столбцы', Icon: BarChart3 },
-    { value: 'donut', label: 'Кольцо', Icon: PieChart },
+    { value: 'bar', label: t('metrics.chartKind.bar'), Icon: BarChart3 },
+    { value: 'donut', label: t('metrics.chartKind.donut'), Icon: PieChart },
   ]
   return (
     <div
       role="group"
-      aria-label="Тип графика"
+      aria-label={t('metrics.chartKind.aria')}
       className="inline-flex w-fit rounded-full border border-line bg-surface p-0.5"
     >
       {options.map(({ value: v, label, Icon }) => {
