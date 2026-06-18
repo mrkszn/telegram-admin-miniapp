@@ -198,6 +198,42 @@ export const uk = {
   'root.openViaTelegram': 'Відкрийте застосунок через Telegram, щоб отримати initData.',
   'root.authorizing': 'Авторизація…',
   'root.initializing': 'Ініціалізація…',
+
+  // drill-down: clients list ---------------------------------
+  'clients.list.sessions': 'сесій',
+  'clients.byTopic': 'Клієнти за темою',
+
+  // clients search modes -------------------------------------
+  'clients.mode.aria': 'Режим пошуку',
+  'clients.mode.semantic': 'Семантичний',
+  'clients.mode.name': "За ім'ям",
+  'clients.mode.topics': 'За темами',
+  'clients.byName.aria': "Пошук за ім'ям або ID",
+  'clients.byName.placeholder': "Ім'я або Telegram ID…",
+  'clients.byName.hint': "Введіть ім'я клієнта або його Telegram ID.",
+  'clients.byTopics.title': 'Теми',
+  'clients.byTopics.hint': 'Оберіть одну або кілька тем, щоб знайти клієнтів.',
+  'clients.match.aria': 'Режим збігу',
+  'clients.match.and': 'усі',
+  'clients.match.or': 'будь-яка',
+
+  // sessions list / timeline ---------------------------------
+  'sessions.empty': 'Сесій за період немає.',
+  'session.title': 'Сесія',
+  'session.loading': 'Завантаження сесії…',
+  'session.summary': 'Підсумок',
+  'session.answers': 'Відповіді',
+  'session.transcript': 'Діалог',
+  'session.noMessages': 'У цій сесії немає повідомлень.',
+
+  // dashboard drill-down aria labels -------------------------
+  'dashboard.drill.sessions': 'Переглянути сесії',
+  'dashboard.drill.topics': 'Переглянути теми',
+  'dashboard.drill.positiveSessions': 'Переглянути позитивні сесії',
+  'dashboard.drill.negativeSessions': 'Переглянути негативні сесії',
+
+  // metrics drill-down ---------------------------------------
+  'metrics.byCategory': ({ label }: TranslationParams) => `Клієнти за метрикою «${label}»`,
 } satisfies Record<string, TranslationEntry>
 
 export type TranslationKey = keyof typeof uk
@@ -358,6 +394,37 @@ export const en: Record<TranslationKey, TranslationEntry> = {
   'root.openViaTelegram': 'Open the app via Telegram to obtain initData.',
   'root.authorizing': 'Authorizing…',
   'root.initializing': 'Initializing…',
+
+  'clients.list.sessions': 'sessions',
+  'clients.byTopic': 'Clients by topic',
+
+  'clients.mode.aria': 'Search mode',
+  'clients.mode.semantic': 'Semantic',
+  'clients.mode.name': 'By name',
+  'clients.mode.topics': 'By topics',
+  'clients.byName.aria': 'Search by name or ID',
+  'clients.byName.placeholder': 'Name or Telegram ID…',
+  'clients.byName.hint': 'Enter a client name or their Telegram ID.',
+  'clients.byTopics.title': 'Topics',
+  'clients.byTopics.hint': 'Pick one or more topics to find clients.',
+  'clients.match.aria': 'Match mode',
+  'clients.match.and': 'all',
+  'clients.match.or': 'any',
+
+  'sessions.empty': 'No sessions for this period.',
+  'session.title': 'Session',
+  'session.loading': 'Loading session…',
+  'session.summary': 'Summary',
+  'session.answers': 'Answers',
+  'session.transcript': 'Transcript',
+  'session.noMessages': 'This session has no messages.',
+
+  'dashboard.drill.sessions': 'View sessions',
+  'dashboard.drill.topics': 'View topics',
+  'dashboard.drill.positiveSessions': 'View positive sessions',
+  'dashboard.drill.negativeSessions': 'View negative sessions',
+
+  'metrics.byCategory': ({ label }: TranslationParams) => `Clients for metric “${label}”`,
 }
 
 export const translations: Record<Language, Record<TranslationKey, TranslationEntry>> = {

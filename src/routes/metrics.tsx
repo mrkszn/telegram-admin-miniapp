@@ -15,9 +15,15 @@ import { ErrorState } from '@/components/feedback/ErrorState'
 import { Skeleton } from '@/components/feedback/Skeleton'
 import { AnimatedBar } from '@/components/feedback/AnimatedBar'
 import { CountUp } from '@/components/feedback/CountUp'
+import { ClientListSheet } from '@/components/clients/ClientListSheet'
 import { useApi } from '@/lib/hooks/useApi'
 import { resolveRange, DEFAULT_PRESET, type DateRangePreset } from '@/lib/date-range'
-import { fetchMetrics, fetchQuestions } from '@/lib/api/admin'
+import {
+  fetchMetrics,
+  fetchQuestions,
+  fetchCategoryClients,
+  type DateRange,
+} from '@/lib/api/admin'
 import {
   DEFAULT_METRIC_KEY,
   METRIC_KEYS as STATIC_METRIC_KEYS,
@@ -118,7 +124,11 @@ export function MetricsRoute() {
         ) : isLoading || !data ? (
           <MetricsSkeleton />
         ) : (
-          <MetricView data={data} label={label} />
+          <MetricView
+            data={data}
+            label={label}
+            range={{ date_from: range.date_from, date_to: range.date_to }}
+          />
         )}
       </div>
     </AppShell>
@@ -231,7 +241,15 @@ function GroupByToggle({
 
 /* ── views ──────────────────────────────────────────────── */
 
-function MetricView({ data, label }: { data: MetricsResponse; label: string }) {
+function MetricView({
+  data,
+  label,
+  range,
+}: {
+  data: MetricsResponse
+  label: string
+  range: DateRange
+}) {
   const t = useT()
   switch (data.expected_type) {
     case 'unknown':
@@ -249,7 +267,7 @@ function MetricView({ data, label }: { data: MetricsResponse; label: string }) {
       const dist = data.distribution ?? []
       if (dist.length === 0)
         return <EmptyCard message={t('metrics.noDataForMetric', { label })} />
-      return <EnumView data={data} label={label} />
+      return <EnumView data={data} label={label} range={range} />
     }
     default:
       return <EmptyCard message={t('metrics.unsupported')} />
@@ -321,10 +339,19 @@ function NumberView({ data, label }: { data: MetricsResponse; label: string }) {
 
 type EnumChartKind = 'bar' | 'donut'
 
-function EnumView({ data, label }: { data: MetricsResponse; label: string }) {
+function EnumView({
+  data,
+  label,
+  range,
+}: {
+  data: MetricsResponse
+  label: string
+  range: DateRange
+}) {
   const t = useT()
   const lang = useLanguage()
   const [chartKind, setChartKind] = useState<EnumChartKind>('bar')
+  const [value, setValue] = useState<string | null>(null)
   const dist = [...(data.distribution ?? [])].sort((a, b) => b.count - a.count)
   const max = dist[0]?.count ?? 0
   const total = data.total ?? dist.reduce((s, d) => s + d.count, 0)
@@ -397,10 +424,12 @@ function EnumView({ data, label }: { data: MetricsResponse; label: string }) {
         </header>
         <div className="overflow-hidden rounded-card border border-line bg-surface">
           {dist.map((d, i) => (
-            <div
+            <button
               key={d.value}
+              type="button"
+              onClick={() => setValue(d.value)}
               className={cn(
-                'flex animate-fade-rise items-center gap-2.5 px-3.5 py-3',
+                'flex w-full animate-fade-rise items-center gap-2.5 px-3.5 py-3 text-left transition-colors hover:bg-surface-2',
                 i < dist.length - 1 && 'border-b border-line',
               )}
               style={{ animationDelay: `${i * 60}ms` }}
@@ -424,10 +453,23 @@ function EnumView({ data, label }: { data: MetricsResponse; label: string }) {
                   suffix="%"
                 />
               </span>
-            </div>
+            </button>
           ))}
         </div>
       </section>
+
+      <ClientListSheet
+        open={value != null}
+        onOpenChange={(o) => {
+          if (!o) setValue(null)
+        }}
+        title={value ?? ''}
+        description={t('metrics.byCategory', { label })}
+        fetchKey={`${data.metric_key}|${value ?? ''}|${range.date_from}|${range.date_to}`}
+        fetcher={() =>
+          fetchCategoryClients(data.metric_key, { value: value ?? '', ...range })
+        }
+      />
     </div>
   )
 }

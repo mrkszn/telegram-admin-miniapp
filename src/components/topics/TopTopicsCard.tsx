@@ -11,6 +11,10 @@ interface TopTopicsCardProps {
   /** Max rows to render (defaults to 3). */
   limit?: number
   emptyHint?: string
+  /** When set, the whole card becomes a button (drill-down affordance). */
+  onClick?: () => void
+  /** Accessible label for the clickable card. */
+  ariaLabel?: string
 }
 
 const dotTone: Record<TopTopicsCardProps['tone'], string> = {
@@ -34,13 +38,26 @@ export function TopTopicsCard({
   topics,
   limit = 3,
   emptyHint,
+  onClick,
+  ariaLabel,
 }: TopTopicsCardProps) {
   const t = useT()
   const items = topics.slice(0, limit)
   const empty = emptyHint ?? t('common.noData')
   const max = items[0]?.count ?? 0
+  const clickable = onClick != null
+  const Tag = clickable ? 'button' : 'div'
   return (
-    <div className="card-shell flex flex-col gap-2.5">
+    <Tag
+      type={clickable ? 'button' : undefined}
+      onClick={onClick}
+      aria-label={clickable ? ariaLabel : undefined}
+      className={cn(
+        'card-shell flex flex-col gap-2.5 text-left',
+        clickable &&
+          'cursor-pointer transition-colors hover:border-line-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+      )}
+    >
       <div className="flex items-center justify-between">
         <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted">
           {title}
@@ -74,6 +91,6 @@ export function TopTopicsCard({
           ))}
         </ul>
       )}
-    </div>
+    </Tag>
   )
 }

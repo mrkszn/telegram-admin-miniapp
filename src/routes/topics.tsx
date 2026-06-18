@@ -7,9 +7,10 @@ import { ErrorState } from '@/components/feedback/ErrorState'
 import { Skeleton } from '@/components/feedback/Skeleton'
 import { AnimatedBar } from '@/components/feedback/AnimatedBar'
 import { CountUp } from '@/components/feedback/CountUp'
+import { ClientListSheet } from '@/components/clients/ClientListSheet'
 import { useApi } from '@/lib/hooks/useApi'
 import { resolveRange, DEFAULT_PRESET, type DateRangePreset } from '@/lib/date-range'
-import { fetchTopics } from '@/lib/api/admin'
+import { fetchTopics, fetchTopicClients, type DateRange } from '@/lib/api/admin'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n'
 import type { TopicCount, TopicSentiment, TopicsResponse } from '@/lib/api/types'
@@ -48,7 +49,11 @@ export function TopicsRoute() {
         ) : isLoading || !data ? (
           <TopicsSkeleton />
         ) : (
-          <TopicsContent topics={data.topics} tone={tone} />
+          <TopicsContent
+            topics={data.topics}
+            tone={tone}
+            range={{ date_from: range.date_from, date_to: range.date_to }}
+          />
         )}
 
         <MentionsPlaceholder />
@@ -60,15 +65,30 @@ export function TopicsRoute() {
 function TopicsContent({
   topics,
   tone,
+  range,
 }: {
   topics: TopicCount[]
   tone: TopicSentiment
+  range: DateRange
 }) {
+  const t = useT()
   const top5 = topics.slice(0, 5)
+  const [topic, setTopic] = useState<string | null>(null)
   return (
     <>
-      <TopBars topics={top5} tone={tone} />
-      <TopTable topics={top5} />
+      <TopBars topics={top5} tone={tone} onPickTopic={setTopic} />
+      <TopTable topics={top5} onPickTopic={setTopic} />
+
+      <ClientListSheet
+        open={topic != null}
+        onOpenChange={(o) => {
+          if (!o) setTopic(null)
+        }}
+        title={topic ?? ''}
+        description={t('clients.byTopic')}
+        fetchKey={`${topic ?? ''}|${range.date_from}|${range.date_to}`}
+        fetcher={() => fetchTopicClients(topic ?? '', range)}
+      />
     </>
   )
 }
@@ -76,9 +96,11 @@ function TopicsContent({
 function TopBars({
   topics,
   tone,
+  onPickTopic,
 }: {
   topics: TopicCount[]
   tone: TopicSentiment
+  onPickTopic(topic: string): void
 }) {
   const t = useT()
   const max = topics[0]?.count ?? 0
@@ -95,26 +117,32 @@ function TopBars({
         <span className="text-sm text-muted">{t('topics.noDataPeriod')}</span>
       ) : (
         <ul className="m-0 flex list-none flex-col gap-2.5 p-0" data-testid="topic-bars">
-          {topics.map((t, i) => {
-            const pct = max > 0 ? (t.count / max) * 100 : 0
+          {topics.map((tc, i) => {
+            const pct = max > 0 ? (tc.count / max) * 100 : 0
             return (
               <li
-                key={`${tone}|${t.topic}`}
-                className="flex animate-fade-rise items-center gap-2.5"
+                key={`${tone}|${tc.topic}`}
+                className="animate-fade-rise"
                 style={{ animationDelay: `${i * 60}ms` }}
               >
-                <span className="serif-num w-5 text-[15px] text-muted-2">{i + 1}</span>
-                <span className="flex-[0_0_38%] truncate text-[13.5px] text-ink">{t.topic}</span>
-                <AnimatedBar
-                  pct={pct}
-                  className={barColor}
-                  wrapperClassName="flex-1"
-                  delayMs={120 + i * 80}
-                  label={`${t.topic}: ${t.count}`}
-                />
-                <span className="w-[30px] text-right font-mono text-[13px] font-medium text-ink">
-                  <CountUp to={t.count} delayMs={150 + i * 80} durationMs={650} />
-                </span>
+                <button
+                  type="button"
+                  onClick={() => onPickTopic(tc.topic)}
+                  className="flex w-full items-center gap-2.5 rounded-tag text-left transition-colors hover:bg-surface-2"
+                >
+                  <span className="serif-num w-5 text-[15px] text-muted-2">{i + 1}</span>
+                  <span className="flex-[0_0_38%] truncate text-[13.5px] text-ink">{tc.topic}</span>
+                  <AnimatedBar
+                    pct={pct}
+                    className={barColor}
+                    wrapperClassName="flex-1"
+                    delayMs={120 + i * 80}
+                    label={`${tc.topic}: ${tc.count}`}
+                  />
+                  <span className="w-[30px] text-right font-mono text-[13px] font-medium text-ink">
+                    <CountUp to={tc.count} delayMs={150 + i * 80} durationMs={650} />
+                  </span>
+                </button>
               </li>
             )
           })}
@@ -124,7 +152,13 @@ function TopBars({
   )
 }
 
-function TopTable({ topics }: { topics: TopicCount[] }) {
+function TopTable({
+  topics,
+  onPickTopic,
+}: {
+  topics: TopicCount[]
+  onPickTopic(topic: string): void
+}) {
   const t = useT()
   if (topics.length === 0) return null
   return (
@@ -134,15 +168,17 @@ function TopTable({ topics }: { topics: TopicCount[] }) {
         <span className="w-[70px] text-right">{t('topics.table.sentiment')}</span>
         <span className="w-[46px] text-right">{t('topics.table.count')}</span>
       </div>
-      {topics.map((t, i) => {
-        const positive = t.avg_sentiment >= 0
+      {topics.map((tc, i) => {
+        const positive = tc.avg_sentiment >= 0
         return (
-          <div
-            key={t.topic}
-            className="flex animate-fade-rise items-center border-t border-line px-3.5 py-3"
+          <button
+            key={tc.topic}
+            type="button"
+            onClick={() => onPickTopic(tc.topic)}
+            className="flex w-full animate-fade-rise items-center border-t border-line px-3.5 py-3 text-left transition-colors hover:bg-surface-2"
             style={{ animationDelay: `${i * 50}ms` }}
           >
-            <span className="flex-1 truncate text-sm font-medium text-ink">{t.topic}</span>
+            <span className="flex-1 truncate text-sm font-medium text-ink">{tc.topic}</span>
             <span
               className={cn(
                 'w-[70px] text-right font-mono text-[13px] font-medium',
@@ -150,7 +186,7 @@ function TopTable({ topics }: { topics: TopicCount[] }) {
               )}
             >
               <CountUp
-                to={t.avg_sentiment}
+                to={tc.avg_sentiment}
                 durationMs={650}
                 delayMs={100 + i * 50}
                 fractionDigits={2}
@@ -158,9 +194,9 @@ function TopTable({ topics }: { topics: TopicCount[] }) {
               />
             </span>
             <span className="w-[46px] text-right font-mono text-[13px] font-medium text-muted">
-              <CountUp to={t.count} delayMs={120 + i * 50} durationMs={600} />
+              <CountUp to={tc.count} delayMs={120 + i * 50} durationMs={600} />
             </span>
-          </div>
+          </button>
         )
       })}
     </div>

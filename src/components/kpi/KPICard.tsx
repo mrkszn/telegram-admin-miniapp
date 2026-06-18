@@ -14,6 +14,10 @@ export interface KPICardProps {
   deltaKind?: DeltaKind
   /** Sparkline slot — accept any tiny chart you want to drop in. */
   spark?: ReactNode
+  /** When set, the whole card becomes a button (drill-down affordance). */
+  onClick?: () => void
+  /** Accessible label for the clickable card. */
+  ariaLabel?: string
   className?: string
 }
 
@@ -36,18 +40,26 @@ export function KPICard({
   delta,
   deltaKind = 'neutral',
   spark,
+  onClick,
+  ariaLabel,
   className,
 }: KPICardProps) {
   const DeltaIcon = deltaIcon[deltaKind]
+  const clickable = onClick != null
+  const Tag = clickable ? 'button' : 'div'
   return (
-    <div
+    <Tag
+      type={clickable ? 'button' : undefined}
+      onClick={onClick}
+      aria-label={clickable ? ariaLabel : undefined}
       className={cn(
-        'flex min-w-0 flex-col gap-2 overflow-hidden rounded-card border border-line bg-surface p-4',
+        'flex min-w-0 flex-col gap-2 overflow-hidden rounded-card border border-line bg-surface p-4 text-left',
         // Tap micro-interaction + enter animation. tw-animate-css ships
         // these utilities; on tap the card subtly recedes (active:scale)
         // and on mount it fades + rises 8 px into place.
         'animate-fade-rise transition-transform duration-200 ease-out',
         'active:scale-[0.98]',
+        clickable && 'cursor-pointer hover:border-line-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         className,
       )}
       // container-type makes 1cqi == 1% of THIS card's inline-size —
@@ -91,6 +103,6 @@ export function KPICard({
       </div>
       {caption ? <div className="truncate text-xs text-muted">{caption}</div> : null}
       {spark ? <div className="mt-1 h-8">{spark}</div> : null}
-    </div>
+    </Tag>
   )
 }
