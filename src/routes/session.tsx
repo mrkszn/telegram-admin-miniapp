@@ -150,19 +150,47 @@ function messageRole(m: SessionMessage): 'user' | 'agent' {
 }
 
 function AnswerRow({ answer }: { answer: SessionAnswer }) {
+  const marked = coerceText(answer.marked_value)
   return (
     <div className="rounded-card border border-line bg-surface p-3">
       <p className="text-[13px] font-medium text-ink">{answer.question_text}</p>
-      <p className="mt-1 whitespace-pre-line text-[13px] leading-snug text-ink-2">
-        {answer.answer_text}
-      </p>
-      {answer.marked_value ? (
+      {answer.answer_text ? (
+        <p className="mt-1 whitespace-pre-line text-[13px] leading-snug text-ink-2">
+          {answer.answer_text}
+        </p>
+      ) : null}
+      {marked ? (
         <span className="mt-2 inline-flex rounded-tag bg-brand-soft px-2 py-0.5 text-[11px] font-medium text-brand-deep">
-          {answer.marked_value}
+          {marked}
         </span>
       ) : null}
     </div>
   )
+}
+
+/**
+ * Render an unknown backend value (e.g. `marked_value`, typed `Any`) as text.
+ * Objects like `{ value: … }` would otherwise crash React (#31 — "objects are
+ * not valid as a React child"), so we unwrap the common scalar shapes and fall
+ * back to JSON for anything else.
+ */
+function coerceText(v: unknown): string | null {
+  if (v == null) return null
+  if (typeof v === 'string') return v
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v)
+  if (typeof v === 'object') {
+    const o = v as Record<string, unknown>
+    for (const key of ['value', 'label', 'text', 'name', 'title'] as const) {
+      const inner = o[key]
+      if (typeof inner === 'string' || typeof inner === 'number') return String(inner)
+    }
+    try {
+      return JSON.stringify(v)
+    } catch {
+      return null
+    }
+  }
+  return String(v)
 }
 
 function Section({

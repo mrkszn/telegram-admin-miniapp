@@ -32,7 +32,7 @@ const sample: SessionDetail = {
   answers: [
     { question_text: 'Оцініть сервіс', answer_text: 'Відмінно', marked_value: '5' },
   ],
-  card_summary: { summary_text: 'ok' },
+  card_summary: 'ok',
 }
 
 function renderAt(id: string) {
@@ -74,5 +74,25 @@ describe('SessionRoute', () => {
     fetchSessionDetail.mockRejectedValueOnce({ status: 500, message: 'boom' })
     renderAt('s-1')
     expect(await screen.findByRole('alert')).toBeInTheDocument()
+  })
+
+  it('renders an object-valued marked_value without crashing (regression: React #31)', async () => {
+    fetchSessionDetail.mockResolvedValueOnce({
+      ...sample,
+      // backend types marked_value as `Any` — real data can be an object
+      answers: [
+        {
+          question_text: 'Оцініть сервіс',
+          answer_text: 'Відмінно',
+          marked_value: { value: 'Більше року' } as unknown as string,
+        },
+      ],
+    })
+    renderAt('s-1')
+
+    expect(await screen.findByText('Alice Cooper')).toBeInTheDocument()
+    // the inner scalar is unwrapped and shown, no error boundary
+    expect(screen.getByText('Більше року')).toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 })
