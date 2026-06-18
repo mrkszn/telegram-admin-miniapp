@@ -25,10 +25,21 @@ export interface ChatState {
   isBusy: boolean
   /** Last failure message, if any. */
   error: string | null
+  /** Question staged by an "ask AI" marker, waiting for /ask to mount. */
+  queued: string | null
 
   send(question: string): Promise<void>
   clearError(): void
   clearChat(): void
+  /**
+   * Queue a question to be sent the next time the chat route mounts (used by
+   * "ask AI" markers scattered across other tabs — they navigate to /ask and
+   * let the route flush this queue, so the user lands on a chat that already
+   * has their question + answer in flight). Replaces any older pending one.
+   */
+  enqueueQuestion(question: string): void
+  /** Pop the queued question, if any. */
+  consumeQueued(): string | null
 }
 
 const HISTORY_WINDOW = 6
@@ -73,6 +84,7 @@ export const useChatStore = create<ChatState>()(
       messages: [],
       isBusy: false,
       error: null,
+      queued: null,
 
       async send(question: string) {
         const trimmed = question.trim()
@@ -122,6 +134,19 @@ export const useChatStore = create<ChatState>()(
 
       clearChat() {
         set({ messages: [], error: null, isBusy: false })
+      },
+
+      enqueueQuestion(question: string) {
+        const trimmed = question.trim()
+        if (!trimmed) return
+        set({ queued: trimmed })
+      },
+
+      consumeQueued() {
+        const q = get().queued
+        if (!q) return null
+        set({ queued: null })
+        return q
       },
     }),
     {

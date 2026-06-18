@@ -34,7 +34,15 @@ export function AskRoute() {
   const error = useChatStore((s) => s.error)
   const send = useChatStore((s) => s.send)
   const clearError = useChatStore((s) => s.clearError)
+  const consumeQueued = useChatStore((s) => s.consumeQueued)
   const chatRef = useRef<ChatWidgetHandle>(null)
+
+  // Flush any question queued by an AskAiMarker on another tab — fires once
+  // per mount, with a busy guard so a slow agent reply doesn't get hijacked.
+  useEffect(() => {
+    const queued = consumeQueued()
+    if (queued) void send(queued)
+  }, [consumeQueued, send])
 
   useEffect(() => {
     chatRef.current?.scrollToBottom()

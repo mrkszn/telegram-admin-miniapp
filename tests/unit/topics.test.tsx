@@ -91,7 +91,7 @@ describe('TopicsRoute', () => {
       </MemoryRouter>,
     )
     expect(await screen.findByText('За період даних немає.')).toBeInTheDocument()
-    // mentions placeholder still renders
-    expect(screen.getByText('Наступна ітерація')).toBeInTheDocument()
+    // Mentions placeholder was removed in favour of the working drill-down.
+    expect(screen.queryByText('Наступна ітерація')).not.toBeInTheDocument()
   })
 })

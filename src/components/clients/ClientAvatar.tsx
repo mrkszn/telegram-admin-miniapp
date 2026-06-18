@@ -14,7 +14,7 @@ const toneBg: Record<NonNullable<ClientAvatarProps['tone']>, string> = {
   positive: 'bg-mint/25 text-success',
   negative: 'bg-rose/25 text-danger',
   neutral: 'bg-surface-2 text-muted',
-  brand: 'bg-brand-soft text-brand-deep',
+  brand: 'bg-brand-soft text-brand-on-soft',
 }
 
 export function ClientAvatar({
