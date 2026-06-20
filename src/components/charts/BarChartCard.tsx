@@ -14,6 +14,10 @@ export interface BarChartCardProps<T extends Record<string, unknown>> {
   layout?: 'horizontal' | 'vertical'
   className?: string
   height?: number
+  /** Override Tremor's y-axis gutter width. Defaults: 36 (horizontal) / 120 (vertical). */
+  yAxisWidth?: number
+  /** Pass-through to Tremor BarChart — render multi-category bars side-by-side instead of stacked. */
+  stack?: boolean
 }
 
 export function BarChartCard<T extends Record<string, unknown>>({
@@ -27,7 +31,10 @@ export function BarChartCard<T extends Record<string, unknown>>({
   layout = 'horizontal',
   className,
   height = 200,
+  yAxisWidth,
+  stack,
 }: BarChartCardProps<T>) {
+  const resolvedYAxisWidth = yAxisWidth ?? (layout === 'vertical' ? 120 : 36)
   return (
     <div className={cn('rounded-card border border-line bg-surface p-4', className)}>
       <div className="mb-3 flex flex-col gap-0.5">
@@ -46,10 +53,8 @@ export function BarChartCard<T extends Record<string, unknown>>({
         showLegend={categories.length > 1}
         showAnimation
         animationDuration={700}
-        // Vertical bars need a wider y-axis to fit long category names
-        // — defaulting to 36 px clips them. Horizontal bars only need
-        // numeric ticks, so the original 36 is fine.
-        yAxisWidth={layout === 'vertical' ? 120 : 36}
+        yAxisWidth={resolvedYAxisWidth}
+        stack={stack}
         style={{ height }}
       />
     </div>
