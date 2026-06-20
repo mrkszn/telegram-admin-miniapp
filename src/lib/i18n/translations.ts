@@ -30,9 +30,12 @@ export const uk = {
   // common ----------------------------------------------------
   'common.error': 'Помилка',
   'common.retry': 'Повторити',
+  'common.reload': 'Оновити',
   'common.loadFailed': 'Не вдалося завантажити дані. Спробуйте пізніше.',
   'common.noData': 'Немає даних',
   'common.loading': 'Завантаження',
+  'common.sectionFailed': 'Не вдалося завантажити цей розділ. Можливо, ' +
+    'застарілий кеш після оновлення додатку.',
 
   // sentiment -------------------------------------------------
   'sentiment.positive': 'позитив',
@@ -166,6 +169,7 @@ export const uk = {
   'clients.profile.notFound': 'Профіль не знайдено.',
   'clients.profile.lastSession': 'остання сесія',
   'clients.profile.sessions': 'Сесій',
+  'clients.profile.sentiment': 'Sentiment',
   'clients.profile.topics': 'Теми',
   'clients.profile.recentCards': 'Останні картки',
   'clients.profile.viewSessions': 'Переглянути сесії',
@@ -196,6 +200,7 @@ export const uk = {
   // chart from text ------------------------------------------
   'chart.distribution': 'Розподіл',
   'chart.trend': 'Тренд',
+  'chart.loading': 'Завантаження графіка',
   'chart.sentimentDistribution': 'Розподіл тональностей',
   'chart.comparison': 'Порівняння',
   'chart.share': 'Частка',
@@ -258,6 +263,17 @@ export const uk = {
     `Що означає цей фідбек на питання «${question}»: ${answer}. Дай розгорнуту інтерпретацію та порекомендуй дії.`,
   'askAi.summary': ({ text }: TranslationParams) =>
     `Що означає цей фідбек: ${text}. Дай розгорнуту інтерпретацію та порекомендуй дії.`,
+
+  // metric-key fallback labels — only visible until the live
+  // /admin/questions list arrives, but they still need to follow the
+  // language toggle while they show.
+  'metricKey.nps': 'NPS',
+  'metricKey.service_speed': 'Швидкість сервісу',
+  'metricKey.food_taste': 'Смак страв',
+  'metricKey.cleanliness': 'Чистота',
+  'metricKey.price_value': 'Співвідношення ціна/якість',
+  'metricKey.staff_friendliness': 'Дружелюбність персоналу',
+  'metricKey.improvement_wish': 'Побажання',
 } satisfies Record<string, TranslationEntry>
 
 export type TranslationKey = keyof typeof uk
@@ -267,9 +283,12 @@ export type TranslationKey = keyof typeof uk
 export const en: Record<TranslationKey, TranslationEntry> = {
   'common.error': 'Error',
   'common.retry': 'Retry',
+  'common.reload': 'Reload',
   'common.loadFailed': 'Failed to load data. Please try again later.',
   'common.noData': 'No data',
   'common.loading': 'Loading',
+  'common.sectionFailed':
+    'Couldn’t load this section. The app may have been updated since you opened it.',
 
   'sentiment.positive': 'positive',
   'sentiment.negative': 'negative',
@@ -390,6 +409,7 @@ export const en: Record<TranslationKey, TranslationEntry> = {
   'clients.profile.notFound': 'Profile not found.',
   'clients.profile.lastSession': 'last session',
   'clients.profile.sessions': 'Sessions',
+  'clients.profile.sentiment': 'Sentiment',
   'clients.profile.topics': 'Topics',
   'clients.profile.recentCards': 'Recent cards',
   'clients.profile.viewSessions': 'View sessions',
@@ -417,6 +437,7 @@ export const en: Record<TranslationKey, TranslationEntry> = {
 
   'chart.distribution': 'Distribution',
   'chart.trend': 'Trend',
+  'chart.loading': 'Chart loading',
   'chart.sentimentDistribution': 'Sentiment distribution',
   'chart.comparison': 'Comparison',
   'chart.share': 'Share',
@@ -472,6 +493,14 @@ export const en: Record<TranslationKey, TranslationEntry> = {
     `What does this feedback to the question “${question}” mean: ${answer}. Give a detailed interpretation and recommend actions.`,
   'askAi.summary': ({ text }: TranslationParams) =>
     `What does this feedback mean: ${text}. Give a detailed interpretation and recommend actions.`,
+
+  'metricKey.nps': 'NPS',
+  'metricKey.service_speed': 'Service speed',
+  'metricKey.food_taste': 'Food taste',
+  'metricKey.cleanliness': 'Cleanliness',
+  'metricKey.price_value': 'Price / value',
+  'metricKey.staff_friendliness': 'Staff friendliness',
+  'metricKey.improvement_wish': 'Suggestions',
 }
 
 export const translations: Record<Language, Record<TranslationKey, TranslationEntry>> = {

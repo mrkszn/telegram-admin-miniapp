@@ -8,26 +8,40 @@
  * stale and produced 404 from `/admin/metrics` for every value — that's
  * what the "failed to load data" error on the Metrics screen was.
  */
+import { translate, type Language, type TranslationKey } from './i18n'
+
 export interface MetricKeyOption {
   value: string
   label: string
 }
 
-// Static fallback labels in Ukrainian (the default UI language). The live
-// list from GET /admin/questions overrides these whenever it loads, so these
-// only show on the very first paint or if that call fails.
-export const METRIC_KEYS: MetricKeyOption[] = [
-  { value: 'nps', label: 'NPS' },
-  { value: 'service_speed', label: 'Швидкість сервісу' },
-  { value: 'food_taste', label: 'Смак страв' },
-  { value: 'cleanliness', label: 'Чистота' },
-  { value: 'price_value', label: 'Співвідношення ціна/якість' },
-  { value: 'staff_friendliness', label: 'Дружелюбність персоналу' },
-  { value: 'improvement_wish', label: 'Побажання' },
+interface MetricKeySeed {
+  value: string
+  labelKey: TranslationKey
+}
+
+// `labelKey` resolves through the i18n catalogue so the picker follows the
+// language toggle while the live /admin/questions list is in flight.
+const METRIC_KEY_SEEDS: MetricKeySeed[] = [
+  { value: 'nps', labelKey: 'metricKey.nps' },
+  { value: 'service_speed', labelKey: 'metricKey.service_speed' },
+  { value: 'food_taste', labelKey: 'metricKey.food_taste' },
+  { value: 'cleanliness', labelKey: 'metricKey.cleanliness' },
+  { value: 'price_value', labelKey: 'metricKey.price_value' },
+  { value: 'staff_friendliness', labelKey: 'metricKey.staff_friendliness' },
+  { value: 'improvement_wish', labelKey: 'metricKey.improvement_wish' },
 ]
 
-export const DEFAULT_METRIC_KEY = METRIC_KEYS[0]!.value
+export function metricKeyOptions(lang: Language): MetricKeyOption[] {
+  return METRIC_KEY_SEEDS.map((seed) => ({
+    value: seed.value,
+    label: translate(lang, seed.labelKey),
+  }))
+}
 
-export function labelFor(key: string): string {
-  return METRIC_KEYS.find((m) => m.value === key)?.label ?? key
+export const DEFAULT_METRIC_KEY = METRIC_KEY_SEEDS[0]!.value
+
+export function staticLabelFor(key: string, lang: Language): string {
+  const seed = METRIC_KEY_SEEDS.find((m) => m.value === key)
+  return seed ? translate(lang, seed.labelKey) : key
 }

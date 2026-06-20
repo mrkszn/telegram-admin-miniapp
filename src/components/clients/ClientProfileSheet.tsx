@@ -151,7 +151,7 @@ function ProfileBody({
           ariaLabel={t('clients.profile.viewSessions')}
         />
         <ProfileStat
-          label="Sentiment"
+          label={t('clients.profile.sentiment')}
           valueClassName={sentColor}
           value={
             profile.avg_sentiment != null ? (
