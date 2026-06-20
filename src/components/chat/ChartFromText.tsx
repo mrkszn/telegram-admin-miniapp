@@ -1,40 +1,39 @@
-import { useT } from '@/lib/i18n'
-import { detectTemplate, renderHeuristic, renderTemplate } from './chart-templates'
+import { lazy, Suspense } from 'react'
 
 /**
- * Renders the agent's `chart_text` field as a real chart. Two paths:
+ * Thin wrapper around `ChartFromTextImpl`. The impl pulls in the chart
+ * template registry → Tremor → Recharts (~840 kB minified). The /ask
+ * route is loaded as soon as the user opens the chat tab, but most
+ * sessions never receive a `chart_text`, so we lazy-load the chart bundle
+ * and only pay the cost on the first agent reply that actually has one.
  *
- *   1. `[template:<id>]` tag → dispatch to the registry in
- *      `./chart-templates.ts`. The agent picks the template; the registry
- *      owns the parser + renderer for each id (see TemplateId for the list).
- *
- *   2. No tag (legacy / fallback) → try the bar parser first, then the
- *      line parser. Anything neither one can read renders verbatim.
+ * Re-imports of `ChartFromText` are cheap (this file stays Tremor-free).
+ * Once the chunk has loaded the import promise resolves synchronously, so
+ * subsequent chart renders skip the placeholder.
  */
+
+const ChartFromTextImpl = lazy(() => import('./ChartFromTextImpl'))
 
 interface Props {
   text: string
 }
 
 export function ChartFromText({ text }: Props) {
-  const t = useT()
-  const { id, bodyLines, explicitTitle } = detectTemplate(text)
-
-  if (id) {
-    const node = renderTemplate(id, bodyLines, { t, explicitTitle })
-    if (node) return <>{node}</>
-    // Tag matched but payload was unreadable — fall through to heuristic on
-    // the body so we still try to show *something* instead of dumping ASCII.
-    const heuristic = renderHeuristic(bodyLines.join('\n'), t)
-    if (heuristic) return <>{heuristic}</>
-  } else {
-    const heuristic = renderHeuristic(text, t)
-    if (heuristic) return <>{heuristic}</>
-  }
-
   return (
-    <pre className="m-0 max-h-72 overflow-x-auto whitespace-pre-wrap break-words rounded-tag bg-surface-2 px-3 py-3 font-mono text-[12px] leading-[17px] text-ink-2">
-      {text}
-    </pre>
+    <Suspense fallback={<ChartPlaceholder />}>
+      <ChartFromTextImpl text={text} />
+    </Suspense>
+  )
+}
+
+/** Neutral pulse while the chart chunk is in flight — same visual weight
+ *  as a small chart card so the bubble layout doesn't jump. */
+function ChartPlaceholder() {
+  return (
+    <div
+      role="status"
+      aria-label="Chart loading"
+      className="h-44 animate-pulse rounded-tag bg-surface-2"
+    />
   )
 }

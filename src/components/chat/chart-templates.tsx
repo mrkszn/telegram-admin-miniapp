@@ -44,7 +44,8 @@ const TEMPLATE_IDS: readonly TemplateId[] = [
 const TEMPLATE_TAG_RE = /^\s*\[template:\s*([a-z]+(?:\.[a-z]+)*)\s*\]\s*$/i
 const BAR_ROW_RE = /^\s*(.+?)\s*\|\s*(.+?)\s*$/
 const LINE_ROW_RE = /^\s*(.+?)\s*:\s*([\d.,+-]+)\s*$/
-const GROUPED_ROW_RE = /^\s*(.+?)\s*\|\s*\+?\s*([\d.,-]+)[\s,;]+-?\s*([\d.,-]+)\s*$/
+// Spec: literal `+` and `-` are mandatory; numbers are non-negative.
+const GROUPED_ROW_RE = /^\s*(.+?)\s*\|\s*\+\s*([\d.,]+)\s+-\s*([\d.,]+)\s*$/
 const NUMBER_ONLY_RE = /^\s*([+-]?[\d.,]+(?:\s*%)?)\s*$/
 
 interface Row {
@@ -124,6 +125,11 @@ function parseLineRows(lines: string[]): { rows: Row[]; title?: string } {
 /** Cap label characters so the y-axis gutter doesn't eat the chart width. */
 const MAX_LABEL_CHARS = 22
 
+/** Row-count caps (defense-in-depth; backend also enforces). */
+const MAX_BAR_ROWS = 12
+const MAX_DONUT_ROWS = 6
+const MAX_LINE_POINTS = 60
+
 function truncate(s: string, max = MAX_LABEL_CHARS): string {
   return s.length > max ? `${s.slice(0, max - 1)}…` : s
 }
@@ -178,7 +184,8 @@ const TEMPLATES: Record<TemplateId, Template> = {
   'bar.distribution': (lines, { t, explicitTitle }) => {
     const { rows, title } = parseBarRows(lines)
     if (rows.length < 2) return null
-    const truncated = rows.map((r) => ({ label: truncate(r.label), value: r.value }))
+    const capped = rows.slice(0, MAX_BAR_ROWS)
+    const truncated = capped.map((r) => ({ label: truncate(r.label), value: r.value }))
     return (
       <BarChartCard
         title={explicitTitle ?? title ?? t('chart.distribution')}
@@ -197,10 +204,11 @@ const TEMPLATES: Record<TemplateId, Template> = {
   'bar.sentiment': (lines, { t, explicitTitle }) => {
     const { rows, title } = parseBarRows(lines)
     if (rows.length < 2) return null
+    const capped = rows.slice(0, MAX_BAR_ROWS)
     // Tremor BarChart paints one colour per category, not per row, so we
     // expand each row into its own category and fill missing cells with 0.
     // That way each bar gets a distinct fill while still sharing the y-axis.
-    const truncated = rows.map((r) => ({ ...r, label: truncate(r.label) }))
+    const truncated = capped.map((r) => ({ ...r, label: truncate(r.label) }))
     const colours = truncated.map((r) => toneColor(r.label))
     const categories = truncated.map((_, i) => `v${i}`)
     const data = truncated.map((r, i) => {
@@ -230,7 +238,8 @@ const TEMPLATES: Record<TemplateId, Template> = {
   'bar.grouped': (lines, { t, explicitTitle }) => {
     const { rows, title } = parseGroupedRows(lines)
     if (rows.length < 1) return null
-    const truncated = rows.map((r) => ({
+    const capped = rows.slice(0, MAX_BAR_ROWS)
+    const truncated = capped.map((r) => ({
       label: truncate(r.label),
       positive: r.positive,
       negative: r.negative,
@@ -253,7 +262,7 @@ const TEMPLATES: Record<TemplateId, Template> = {
   'donut.share': (lines, { t, explicitTitle }) => {
     const { rows, title } = parseBarRows(lines)
     if (rows.length < 2) return null
-    const data = rows.map((r) => ({ label: r.label, value: r.value }))
+    const data = rows.slice(0, MAX_DONUT_ROWS).map((r) => ({ label: r.label, value: r.value }))
     return (
       <DonutChartCard
         title={explicitTitle ?? title ?? t('chart.share')}
@@ -269,10 +278,11 @@ const TEMPLATES: Record<TemplateId, Template> = {
   'line.trend': (lines, { t, explicitTitle }) => {
     const { rows, title } = parseLineRows(lines)
     if (rows.length < 2) return null
+    const capped = rows.slice(0, MAX_LINE_POINTS)
     return (
       <LineChartCard
         title={explicitTitle ?? title ?? t('chart.trend')}
-        data={rows.map((r) => ({ label: r.label, value: r.value }))}
+        data={capped.map((r) => ({ label: r.label, value: r.value }))}
         index="label"
         categories={['value']}
         colors={['cyan']}

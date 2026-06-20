@@ -20,6 +20,11 @@ vi.mock('@/lib/telegram/auth', () => ({
 }))
 
 const { AskRoute } = await import('@/routes/ask')
+// Pre-warm the lazy chart chunk. In prod it's loaded on first chart_text;
+// here we eagerly evaluate it during module collection so its transitive
+// @headlessui import runs before @testing-library/user-event swaps the
+// global focus shim, which otherwise crashes Headless UI's setup.
+await import('@/components/chat/ChartFromTextImpl')
 
 beforeEach(() => {
   askAdmin.mockReset()
@@ -80,7 +85,9 @@ describe('AskRoute', () => {
     await user.click(screen.getByRole('button', { name: 'Відправити' }))
 
     expect(await screen.findByText(/Динамика рейтинга/)).toBeInTheDocument()
-    expect(screen.getByText(/Пн 4\.2/)).toBeInTheDocument()
+    // ChartFromText is lazy-loaded (Tremor lives in a separate chunk), so
+    // we need to wait for the impl module's dynamic import to resolve.
+    expect(await screen.findByText(/Пн 4\.2/)).toBeInTheDocument()
   })
 
   it('on 401 re-bootstraps auth and retries transparently', async () => {
