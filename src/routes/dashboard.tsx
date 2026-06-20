@@ -12,9 +12,16 @@ import { Skeleton } from '@/components/feedback/Skeleton'
 import { CountUp } from '@/components/feedback/CountUp'
 import { useApi } from '@/lib/hooks/useApi'
 import { usePersistentState } from '@/lib/hooks/usePersistentState'
-import { resolveRange, DEFAULT_PRESET, isDateRangePreset, type DateRangePreset } from '@/lib/date-range'
+import {
+  resolveSelection,
+  formatRangeLabel,
+  DEFAULT_SELECTION,
+  isDateRangeSelection,
+  type DateRangeSelection,
+} from '@/lib/date-range'
 import { fetchOverview, fetchSessions, type DateRange } from '@/lib/api/admin'
-import { useT, type Translator } from '@/lib/i18n'
+import { AskAiCta } from '@/components/chat/AskAiCta'
+import { useT, useLanguage, type Translator } from '@/lib/i18n'
 import type { OverviewResponse, SessionSentiment, TopicCount } from '@/lib/api/types'
 import { ADMIN_NAV } from './nav'
 
@@ -69,12 +76,14 @@ function mergedTopics(o: OverviewResponse): TopicCount[] {
 
 export function DashboardRoute() {
   const t = useT()
-  const [preset, setPreset] = usePersistentState<DateRangePreset>(
-    'period',
-    DEFAULT_PRESET,
-    isDateRangePreset,
+  const lang = useLanguage()
+  const [selection, setSelection] = usePersistentState<DateRangeSelection>(
+    'period_v2',
+    DEFAULT_SELECTION,
+    isDateRangeSelection,
   )
-  const range = useMemo(() => resolveRange(preset), [preset])
+  const range = useMemo(() => resolveSelection(selection), [selection])
+  const periodLabel = formatRangeLabel(selection, t, lang)
   const key = `overview|${range.date_from}|${range.date_to}`
 
   const { data, error, isLoading, refetch } = useApi<OverviewResponse>(key, () =>
@@ -84,7 +93,9 @@ export function DashboardRoute() {
   return (
     <AppShell title={t('title.dashboard')} navItems={ADMIN_NAV}>
       <div className="flex flex-col gap-4">
-        <DateRangeChips value={preset} onChange={setPreset} />
+        <DateRangeChips value={selection} onChange={setSelection} />
+
+        <AskAiCta question={t('askAi.dashboard', { period: periodLabel })} />
 
         {error ? (
           <ErrorState onRetry={() => void refetch()} />

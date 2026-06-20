@@ -82,6 +82,10 @@ export const uk = {
   'dateRange.7d': '7 днів',
   'dateRange.30d': '30 днів',
   'dateRange.90d': '90 днів',
+  'dateRange.custom': 'Свій',
+  'dateRange.from': 'Від',
+  'dateRange.to': 'До',
+  'dateRange.apply': 'Застосувати',
 
   // dashboard -------------------------------------------------
   'dashboard.kpi.sessions': 'Сесій',
@@ -233,14 +237,19 @@ export const uk = {
 
   // ask-AI markers -------------------------------------------
   'askAi.aria': 'Запитати ШІ',
-  'askAi.topic': ({ topic }: TranslationParams) =>
-    `Проаналізуй відгуки за темою «${topic}»`,
-  'askAi.client': ({ name }: TranslationParams) =>
-    `Покажи і проаналізуй історію клієнта ${name}`,
+  'askAi.cta': 'Запитати ШІ про цю вибірку',
+  'askAi.dashboard': ({ period }: TranslationParams) =>
+    `Дай розгорнутий аналітичний звіт за період ${period}. Включи: загальну кількість сесій, середній sentiment, динаміку по днях, топ-5 позитивних і топ-5 негативних тем. Поясни, що це означає для бізнесу, виділи аномалії та сформулюй 2–3 практичні рекомендації. Додай chart_text з візуалізацією тренду або розподілу.`,
+  'askAi.metric': ({ label, period }: TranslationParams) =>
+    `Проаналізуй метрику «${label}» за період ${period}. Покажи середнє/розподіл значень, топ-категорії, аномалії та динаміку. Поясни висновки для бізнесу і запропонуй 2 практичні рекомендації. Додай chart_text з візуалізацією розподілу або тренду.`,
+  'askAi.topicsList': ({ tone, period, topics }: TranslationParams) =>
+    `Проаналізуй топ-5 ${tone} тем за період ${period}: ${topics}. Поясни, що означають ці теми для бізнесу, виділи спільні патерни та які дії варто вжити. Додай chart_text з візуалізацією частоти згадок по темах.`,
+  'askAi.tone.positive': 'позитивних',
+  'askAi.tone.negative': 'негативних',
   'askAi.answer': ({ question, answer }: TranslationParams) =>
-    `Що означає цей фідбек на питання «${question}»: ${answer}`,
+    `Що означає цей фідбек на питання «${question}»: ${answer}. Дай розгорнуту інтерпретацію та порекомендуй дії.`,
   'askAi.summary': ({ text }: TranslationParams) =>
-    `Що означає цей фідбек: ${text}`,
+    `Що означає цей фідбек: ${text}. Дай розгорнуту інтерпретацію та порекомендуй дії.`,
 } satisfies Record<string, TranslationEntry>
 
 export type TranslationKey = keyof typeof uk
@@ -294,6 +303,10 @@ export const en: Record<TranslationKey, TranslationEntry> = {
   'dateRange.7d': '7 days',
   'dateRange.30d': '30 days',
   'dateRange.90d': '90 days',
+  'dateRange.custom': 'Custom',
+  'dateRange.from': 'From',
+  'dateRange.to': 'To',
+  'dateRange.apply': 'Apply',
 
   'dashboard.kpi.sessions': 'Sessions',
   'dashboard.kpi.sessionsCaption': 'for the period',
@@ -430,14 +443,19 @@ export const en: Record<TranslationKey, TranslationEntry> = {
   'metrics.byCategory': ({ label }: TranslationParams) => `Clients for metric “${label}”`,
 
   'askAi.aria': 'Ask AI',
-  'askAi.topic': ({ topic }: TranslationParams) =>
-    `Analyse feedback on the topic “${topic}”`,
-  'askAi.client': ({ name }: TranslationParams) =>
-    `Show and analyse the history of client ${name}`,
+  'askAi.cta': 'Ask AI about this selection',
+  'askAi.dashboard': ({ period }: TranslationParams) =>
+    `Give a detailed analytical report for the period ${period}. Include: total session count, average sentiment, daily dynamics, top-5 positive and top-5 negative topics. Explain what this means for the business, highlight anomalies, and suggest 2–3 practical recommendations. Add chart_text visualising the trend or distribution.`,
+  'askAi.metric': ({ label, period }: TranslationParams) =>
+    `Analyse the metric “${label}” for the period ${period}. Show average / distribution of values, top categories, anomalies, and dynamics. Explain the business takeaway and suggest 2 practical recommendations. Add chart_text visualising the distribution or trend.`,
+  'askAi.topicsList': ({ tone, period, topics }: TranslationParams) =>
+    `Analyse the top-5 ${tone} topics for the period ${period}: ${topics}. Explain what these topics mean for the business, highlight shared patterns, and suggest actions. Add chart_text visualising the mention frequency per topic.`,
+  'askAi.tone.positive': 'positive',
+  'askAi.tone.negative': 'negative',
   'askAi.answer': ({ question, answer }: TranslationParams) =>
-    `What does this feedback to the question “${question}” mean: ${answer}`,
+    `What does this feedback to the question “${question}” mean: ${answer}. Give a detailed interpretation and recommend actions.`,
   'askAi.summary': ({ text }: TranslationParams) =>
-    `What does this feedback mean: ${text}`,
+    `What does this feedback mean: ${text}. Give a detailed interpretation and recommend actions.`,
 }
 
 export const translations: Record<Language, Record<TranslationKey, TranslationEntry>> = {
