@@ -192,6 +192,10 @@ export const uk = {
   // chart from text ------------------------------------------
   'chart.distribution': 'Розподіл',
   'chart.trend': 'Тренд',
+  'chart.sentimentDistribution': 'Розподіл тональностей',
+  'chart.comparison': 'Порівняння',
+  'chart.share': 'Частка',
+  'chart.kpi': 'Показник',
 
   // root / bootstrap -----------------------------------------
   'root.loginFailed': 'Не вдалося увійти',
@@ -405,6 +409,10 @@ export const en: Record<TranslationKey, TranslationEntry> = {
 
   'chart.distribution': 'Distribution',
   'chart.trend': 'Trend',
+  'chart.sentimentDistribution': 'Sentiment distribution',
+  'chart.comparison': 'Comparison',
+  'chart.share': 'Share',
+  'chart.kpi': 'Metric',
 
   'root.loginFailed': 'Failed to sign in',
   'root.openViaTelegram': 'Open the app via Telegram to obtain initData.',
