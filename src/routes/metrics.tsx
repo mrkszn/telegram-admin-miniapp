@@ -18,7 +18,14 @@ import { CountUp } from '@/components/feedback/CountUp'
 import { ClientListSheet } from '@/components/clients/ClientListSheet'
 import { useApi } from '@/lib/hooks/useApi'
 import { usePersistentState } from '@/lib/hooks/usePersistentState'
-import { resolveRange, DEFAULT_PRESET, isDateRangePreset, type DateRangePreset } from '@/lib/date-range'
+import {
+  resolveSelection,
+  formatRangeLabel,
+  DEFAULT_SELECTION,
+  isDateRangeSelection,
+  type DateRangeSelection,
+} from '@/lib/date-range'
+import { AskAiCta } from '@/components/chat/AskAiCta'
 import {
   fetchMetrics,
   fetchQuestions,
@@ -63,20 +70,18 @@ function useMetricKeyOptions(): MetricKeyOptionsState {
 
 export function MetricsRoute() {
   const t = useT()
+  const lang = useLanguage()
   const { options, loaded } = useMetricKeyOptions()
   const fallbackKey = options[0]?.value ?? DEFAULT_METRIC_KEY
-  // Persist the user's pick across navigation / restart. We seed from
-  // localStorage if available — if the backend later reports that key is
-  // gone the sync below downgrades to the first live key.
   const [metricKey, setMetricKey] = usePersistentState<string | null>(
     'selected_metric_key',
     null,
     (v) => v === null || typeof v === 'string',
   )
-  const [preset, setPreset] = usePersistentState<DateRangePreset>(
-    'period',
-    DEFAULT_PRESET,
-    isDateRangePreset,
+  const [selection, setSelection] = usePersistentState<DateRangeSelection>(
+    'period_v2',
+    DEFAULT_SELECTION,
+    isDateRangeSelection,
   )
   const [groupBy, setGroupBy] = usePersistentState<GroupBy>(
     'metrics_group_by',
@@ -84,7 +89,6 @@ export function MetricsRoute() {
     (v): v is GroupBy => v === 'day' || v === 'week',
   )
 
-  // Sync the active key with the live options once they land.
   if (
     loaded &&
     (metricKey === null || !options.find((o) => o.value === metricKey))
@@ -92,7 +96,7 @@ export function MetricsRoute() {
     setMetricKey(fallbackKey)
   }
 
-  const range = useMemo(() => resolveRange(preset), [preset])
+  const range = useMemo(() => resolveSelection(selection), [selection])
   const queryKey = metricKey
     ? `metrics|${metricKey}|${range.date_from}|${range.date_to}|${groupBy}`
     : null
@@ -116,6 +120,7 @@ export function MetricsRoute() {
   const displayKey = metricKey ?? fallbackKey
   const label = labelFor(displayKey, options)
   const isNumber = data?.expected_type === 'number'
+  const periodLabel = formatRangeLabel(selection, t, lang)
 
   return (
     <AppShell title={t('title.metrics')} navItems={ADMIN_NAV}>
@@ -124,11 +129,15 @@ export function MetricsRoute() {
           metricKey={displayKey}
           options={options}
           onMetricKeyChange={setMetricKey}
-          preset={preset}
-          onPresetChange={setPreset}
+          selection={selection}
+          onSelectionChange={setSelection}
           groupBy={groupBy}
           onGroupByChange={setGroupBy}
           showGroupBy={isNumber}
+        />
+
+        <AskAiCta
+          question={t('askAi.metric', { label, period: periodLabel })}
         />
 
         {error ? (
@@ -157,8 +166,8 @@ interface FilterBarProps {
   metricKey: string
   options: MetricKeyOption[]
   onMetricKeyChange(next: string): void
-  preset: DateRangePreset
-  onPresetChange(next: DateRangePreset): void
+  selection: DateRangeSelection
+  onSelectionChange(next: DateRangeSelection): void
   groupBy: GroupBy
   onGroupByChange(next: GroupBy): void
   showGroupBy: boolean
@@ -168,8 +177,8 @@ function FilterBar({
   metricKey,
   options,
   onMetricKeyChange,
-  preset,
-  onPresetChange,
+  selection,
+  onSelectionChange,
   groupBy,
   onGroupByChange,
   showGroupBy,
@@ -205,7 +214,7 @@ function FilterBar({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <DateRangeChips value={preset} onChange={onPresetChange} />
+      <DateRangeChips value={selection} onChange={onSelectionChange} />
 
       {showGroupBy ? <GroupByToggle value={groupBy} onChange={onGroupByChange} /> : null}
     </div>

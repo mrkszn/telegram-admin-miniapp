@@ -7,22 +7,29 @@ import { Skeleton } from '@/components/feedback/Skeleton'
 import { AnimatedBar } from '@/components/feedback/AnimatedBar'
 import { CountUp } from '@/components/feedback/CountUp'
 import { ClientListSheet } from '@/components/clients/ClientListSheet'
-import { AskAiMarker } from '@/components/chat/AskAiMarker'
+import { AskAiCta } from '@/components/chat/AskAiCta'
 import { useApi } from '@/lib/hooks/useApi'
 import { usePersistentState } from '@/lib/hooks/usePersistentState'
-import { resolveRange, DEFAULT_PRESET, isDateRangePreset, type DateRangePreset } from '@/lib/date-range'
+import {
+  resolveSelection,
+  formatRangeLabel,
+  DEFAULT_SELECTION,
+  isDateRangeSelection,
+  type DateRangeSelection,
+} from '@/lib/date-range'
 import { fetchTopics, fetchTopicClients, type DateRange } from '@/lib/api/admin'
 import { cn } from '@/lib/utils'
-import { useT } from '@/lib/i18n'
+import { useT, useLanguage } from '@/lib/i18n'
 import type { TopicCount, TopicSentiment, TopicsResponse } from '@/lib/api/types'
 import { ADMIN_NAV } from './nav'
 
 export function TopicsRoute() {
   const t = useT()
-  const [preset, setPreset] = usePersistentState<DateRangePreset>(
-    'period',
-    DEFAULT_PRESET,
-    isDateRangePreset,
+  const lang = useLanguage()
+  const [selection, setSelection] = usePersistentState<DateRangeSelection>(
+    'period_v2',
+    DEFAULT_SELECTION,
+    isDateRangeSelection,
   )
   const [tone, setTone] = usePersistentState<TopicSentiment>(
     'topics_tone',
@@ -30,7 +37,7 @@ export function TopicsRoute() {
     (v): v is TopicSentiment => v === 'positive' || v === 'negative',
   )
 
-  const range = useMemo(() => resolveRange(preset), [preset])
+  const range = useMemo(() => resolveSelection(selection), [selection])
   const key = `topics|${tone}|${range.date_from}|${range.date_to}`
 
   const { data, error, isLoading, refetch } = useApi<TopicsResponse>(key, () =>
@@ -41,10 +48,18 @@ export function TopicsRoute() {
     }),
   )
 
+  const top5 = data?.topics.slice(0, 5) ?? []
+  const periodLabel = formatRangeLabel(selection, t, lang)
+  const askAiQuestion = t('askAi.topicsList', {
+    tone: t(tone === 'positive' ? 'askAi.tone.positive' : 'askAi.tone.negative'),
+    period: periodLabel,
+    topics: top5.map((tc) => tc.topic).join(', ') || '—',
+  })
+
   return (
     <AppShell title={t('title.topics')} navItems={ADMIN_NAV}>
       <div className="flex flex-col gap-4">
-        <DateRangeChips value={preset} onChange={setPreset} />
+        <DateRangeChips value={selection} onChange={setSelection} />
 
         <Tabs value={tone} onValueChange={(v) => setTone(v as TopicSentiment)}>
           <TabsList>
@@ -52,6 +67,8 @@ export function TopicsRoute() {
             <TabsTrigger value="negative">{t('topics.tab.negative')}</TabsTrigger>
           </TabsList>
         </Tabs>
+
+        {top5.length > 0 ? <AskAiCta question={askAiQuestion} /> : null}
 
         {error ? (
           <ErrorState onRetry={() => void refetch()} />
@@ -129,13 +146,13 @@ function TopBars({
             return (
               <li
                 key={`${tone}|${tc.topic}`}
-                className="relative flex animate-fade-rise items-center gap-1"
+                className="animate-fade-rise"
                 style={{ animationDelay: `${i * 60}ms` }}
               >
                 <button
                   type="button"
                   onClick={() => onPickTopic(tc.topic)}
-                  className="flex flex-1 items-center gap-2.5 rounded-tag text-left transition-colors hover:bg-surface-2"
+                  className="flex w-full items-center gap-2.5 rounded-tag text-left transition-colors hover:bg-surface-2"
                 >
                   <span className="serif-num w-5 text-[15px] text-muted-2">{i + 1}</span>
                   <span className="flex-[0_0_38%] truncate text-[13.5px] text-ink">{tc.topic}</span>
@@ -150,10 +167,6 @@ function TopBars({
                     <CountUp to={tc.count} delayMs={150 + i * 80} durationMs={650} />
                   </span>
                 </button>
-                <AskAiMarker
-                  question={t('askAi.topic', { topic: tc.topic })}
-                  className="h-6 w-6"
-                />
               </li>
             )
           })}
