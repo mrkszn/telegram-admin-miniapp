@@ -1,4 +1,5 @@
 import { lazy, Suspense } from 'react'
+import { useT } from '@/lib/i18n'
 
 /**
  * Thin wrapper around `ChartFromTextImpl`. The impl pulls in the chart
@@ -29,10 +30,11 @@ export function ChartFromText({ text }: Props) {
 /** Neutral pulse while the chart chunk is in flight — same visual weight
  *  as a small chart card so the bubble layout doesn't jump. */
 function ChartPlaceholder() {
+  const t = useT()
   return (
     <div
       role="status"
-      aria-label="Chart loading"
+      aria-label={t('chart.loading')}
       className="h-44 animate-pulse rounded-tag bg-surface-2"
     />
   )

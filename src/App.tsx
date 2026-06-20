@@ -1,9 +1,11 @@
-import { lazy, Suspense, type ReactNode } from 'react'
+import { Suspense, useEffect, type ReactNode } from 'react'
 import { RouterProvider, createBrowserRouter } from 'react-router-dom'
 import { ThemeProvider } from '@/components/layout/ThemeProvider'
 import { LanguageSync } from '@/lib/i18n/LanguageSync'
 import { BgParticles } from '@/components/feedback/BgParticles'
 import { BrandSpinner } from '@/components/feedback/BrandSpinner'
+import { RouteErrorBoundary } from '@/components/feedback/RouteErrorBoundary'
+import { lazyWithRetry, clearChunkReloadFlag } from '@/lib/lazy-with-retry'
 import { RootRoute } from '@/routes/root'
 import { DashboardRoute } from '@/routes/dashboard'
 
@@ -12,25 +14,36 @@ import { DashboardRoute } from '@/routes/dashboard'
 // (Recharts ≈ charts-*.js), so lazy-loading them keeps that heavy chunk out of
 // the initial bundle. RootRoute (auth bootstrap) and DashboardRoute (landing)
 // stay eager so the first screen paints without an extra round-trip.
-const MetricsRoute = lazy(() =>
+//
+// `lazyWithRetry` wraps each dynamic import so a stale-chunk failure after a
+// deploy retries a couple of times, then triggers a single auto-reload guarded
+// by sessionStorage. If even the reload can't recover, RouteErrorBoundary
+// shows a manual fallback with a Reload button.
+const MetricsRoute = lazyWithRetry(() =>
   import('@/routes/metrics').then((m) => ({ default: m.MetricsRoute })),
 )
-const TopicsRoute = lazy(() =>
+const TopicsRoute = lazyWithRetry(() =>
   import('@/routes/topics').then((m) => ({ default: m.TopicsRoute })),
 )
-const ClientsRoute = lazy(() =>
+const ClientsRoute = lazyWithRetry(() =>
   import('@/routes/clients').then((m) => ({ default: m.ClientsRoute })),
 )
-const AskRoute = lazy(() => import('@/routes/ask').then((m) => ({ default: m.AskRoute })))
-const SessionRoute = lazy(() =>
+const AskRoute = lazyWithRetry(() =>
+  import('@/routes/ask').then((m) => ({ default: m.AskRoute })),
+)
+const SessionRoute = lazyWithRetry(() =>
   import('@/routes/session').then((m) => ({ default: m.SessionRoute })),
 )
-const SettingsRoute = lazy(() =>
+const SettingsRoute = lazyWithRetry(() =>
   import('@/routes/settings').then((m) => ({ default: m.SettingsRoute })),
 )
 
 function lazyRoute(node: ReactNode): ReactNode {
-  return <Suspense fallback={<RouteFallback />}>{node}</Suspense>
+  return (
+    <RouteErrorBoundary>
+      <Suspense fallback={<RouteFallback />}>{node}</Suspense>
+    </RouteErrorBoundary>
+  )
 }
 
 function RouteFallback() {
@@ -53,6 +66,12 @@ const router = createBrowserRouter([
 ])
 
 export function App() {
+  // Clear the one-shot chunk-reload guard once the new shell is up so the
+  // next deploy's chunk miss can use the auto-reload path again. Runs on
+  // every mount, but the underlying sessionStorage write is cheap.
+  useEffect(() => {
+    clearChunkReloadFlag()
+  }, [])
   return (
     <ThemeProvider>
       <LanguageSync />

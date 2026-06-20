@@ -34,12 +34,12 @@ import {
 } from '@/lib/api/admin'
 import {
   DEFAULT_METRIC_KEY,
-  METRIC_KEYS as STATIC_METRIC_KEYS,
-  labelFor as staticLabelFor,
+  metricKeyOptions,
+  staticLabelFor,
   type MetricKeyOption,
 } from '@/lib/metric-keys'
 import { cn } from '@/lib/utils'
-import { useT, useLanguage, numberLocale } from '@/lib/i18n'
+import { useT, useLanguage, numberLocale, type Language } from '@/lib/i18n'
 import type { MetricsResponse, QuestionsResponse } from '@/lib/api/types'
 import { ADMIN_NAV } from './nav'
 
@@ -57,13 +57,15 @@ function useMetricKeyOptions(): MetricKeyOptionsState {
   // fetches until we know the real key list — otherwise the initial
   // metricKey defaults to a stale STATIC value and produces a 404 on
   // every mount, which the user reads as "metrics keep erroring out".
+  const lang = useLanguage()
+  const staticOptions = useMemo(() => metricKeyOptions(lang), [lang])
   const { data } = useApi<QuestionsResponse>('questions|active', () => fetchQuestions())
-  if (!data) return { options: STATIC_METRIC_KEYS, loaded: false }
+  if (!data) return { options: staticOptions, loaded: false }
   const live = data.questions
     .filter((q) => q.expected_type !== 'text' && q.metric_key.trim())
     .map((q) => ({ value: q.metric_key, label: q.text || q.metric_key }))
   return {
-    options: live.length > 0 ? live : STATIC_METRIC_KEYS,
+    options: live.length > 0 ? live : staticOptions,
     loaded: true,
   }
 }
@@ -118,7 +120,7 @@ export function MetricsRoute() {
   )
 
   const displayKey = metricKey ?? fallbackKey
-  const label = labelFor(displayKey, options)
+  const label = labelFor(displayKey, options, lang)
   const isNumber = data?.expected_type === 'number'
   const periodLabel = formatRangeLabel(selection, t, lang)
 
@@ -156,8 +158,8 @@ export function MetricsRoute() {
   )
 }
 
-function labelFor(key: string, options: MetricKeyOption[]): string {
-  return options.find((m) => m.value === key)?.label ?? staticLabelFor(key)
+function labelFor(key: string, options: MetricKeyOption[], lang: Language): string {
+  return options.find((m) => m.value === key)?.label ?? staticLabelFor(key, lang)
 }
 
 /* ── filter bar ─────────────────────────────────────────── */
@@ -184,7 +186,8 @@ function FilterBar({
   showGroupBy,
 }: FilterBarProps) {
   const t = useT()
-  const currentLabel = labelFor(metricKey, options)
+  const lang = useLanguage()
+  const currentLabel = labelFor(metricKey, options, lang)
   return (
     <div className="flex flex-wrap items-center gap-2">
       <DropdownMenu>
