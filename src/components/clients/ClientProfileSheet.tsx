@@ -1,4 +1,6 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { ChevronRight, ArrowLeft } from 'lucide-react'
 import {
   Sheet,
   SheetContent,
@@ -15,6 +17,8 @@ import { toApiError } from '@/lib/api/client'
 import { useT, useLanguage, dateLocale, type TranslationKey } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import type { ApiError, ClientProfileResponse } from '@/lib/api/types'
+
+type SheetView = 'profile' | 'sessions'
 
 /**
  * Bottom-sheet client deep-dive — sessions count, average sentiment, top
@@ -33,16 +37,19 @@ export function ClientProfileSheet({
   const [profile, setProfile] = useState<ClientProfileResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<ApiError | null>(null)
+  const [view, setView] = useState<SheetView>('profile')
 
   useEffect(() => {
     if (telegramId == null) {
       setProfile(null)
       setError(null)
+      setView('profile')
       return
     }
     let cancelled = false
     setLoading(true)
     setError(null)
+    setView('profile')
     fetchClientProfile(telegramId)
       .then((res) => {
         if (!cancelled) setProfile(res)
@@ -64,7 +71,11 @@ export function ClientProfileSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="max-h-[88vh] overflow-y-auto rounded-t-sheet">
         <SheetHeader>
-          <SheetTitle className="sr-only">{t('clients.profile.title')}</SheetTitle>
+          <SheetTitle className="sr-only">
+            {view === 'sessions'
+              ? t('clients.profile.sessionsTitle')
+              : t('clients.profile.title')}
+          </SheetTitle>
           <SheetDescription className="sr-only">
             {t('clients.profile.description')}
           </SheetDescription>
@@ -77,7 +88,15 @@ export function ClientProfileSheet({
         ) : error ? (
           <ErrorState message={t('clients.profile.loadError')} />
         ) : profile ? (
-          <ProfileBody profile={profile} />
+          view === 'sessions' ? (
+            <SessionsView
+              profile={profile}
+              onBack={() => setView('profile')}
+              onClose={() => onOpenChange(false)}
+            />
+          ) : (
+            <ProfileBody profile={profile} onOpenSessions={() => setView('sessions')} />
+          )
         ) : (
           <p className="py-3 text-sm text-muted">{t('clients.profile.notFound')}</p>
         )}
@@ -86,7 +105,13 @@ export function ClientProfileSheet({
   )
 }
 
-function ProfileBody({ profile }: { profile: ClientProfileResponse }) {
+function ProfileBody({
+  profile,
+  onOpenSessions,
+}: {
+  profile: ClientProfileResponse
+  onOpenSessions(): void
+}) {
   const t = useT()
   const lang = useLanguage()
   const sentColor =
@@ -104,6 +129,7 @@ function ProfileBody({ profile }: { profile: ClientProfileResponse }) {
       })
     : '—'
   const name = profile.name ?? t('clients.client', { id: profile.telegram_id })
+  const hasSessions = profile.sessions_count > 0
 
   return (
     <div className="flex flex-col gap-4">
@@ -121,6 +147,8 @@ function ProfileBody({ profile }: { profile: ClientProfileResponse }) {
         <ProfileStat
           label={t('clients.profile.sessions')}
           value={<CountUp to={profile.sessions_count} durationMs={900} />}
+          onClick={hasSessions ? onOpenSessions : undefined}
+          ariaLabel={t('clients.profile.viewSessions')}
         />
         <ProfileStat
           label="Sentiment"
@@ -187,16 +215,154 @@ function ProfileStat({
   label,
   value,
   valueClassName,
+  onClick,
+  ariaLabel,
 }: {
   label: ReactNode
   value: ReactNode
   valueClassName?: string
+  onClick?: () => void
+  ariaLabel?: string
 }) {
-  return (
-    <div className="rounded-input bg-surface-2 px-3 py-2.5">
-      <p className="text-[10.5px] font-semibold uppercase tracking-[0.06em] text-muted">{label}</p>
+  const body = (
+    <>
+      <p className="flex items-center justify-between gap-1 text-[10.5px] font-semibold uppercase tracking-[0.06em] text-muted">
+        <span>{label}</span>
+        {onClick ? <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" /> : null}
+      </p>
       <p className={cn('serif-num mt-0.5 text-2xl', valueClassName ?? 'text-ink')}>{value}</p>
+    </>
+  )
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        aria-label={ariaLabel}
+        className="rounded-input bg-surface-2 px-3 py-2.5 text-left transition-colors hover:bg-line focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+      >
+        {body}
+      </button>
+    )
+  }
+  return <div className="rounded-input bg-surface-2 px-3 py-2.5">{body}</div>
+}
+
+/* ── sessions sub-view ───────────────────────────────────── */
+
+function SessionsView({
+  profile,
+  onBack,
+  onClose,
+}: {
+  profile: ClientProfileResponse
+  onBack(): void
+  onClose(): void
+}) {
+  const t = useT()
+  const navigate = useNavigate()
+  const sessions = useMemo(
+    () => profile.recent_cards.map(parseCard).filter((c) => c.sessionId),
+    [profile.recent_cards],
+  )
+
+  const goSession = (id: string) => {
+    onClose()
+    navigate(`/sessions/${id}`)
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      <header className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={onBack}
+          aria-label={t('clients.profile.backToProfile')}
+          className="grid h-8 w-8 place-items-center rounded-tag text-muted transition-colors hover:bg-surface-2 hover:text-ink"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+        </button>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-base font-semibold text-ink">
+            {profile.name ?? t('clients.client', { id: profile.telegram_id })}
+          </p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted">
+            {t('clients.profile.sessionsTitle')} · {profile.sessions_count}
+          </p>
+        </div>
+      </header>
+
+      {sessions.length === 0 ? (
+        <p className="py-3 text-sm text-muted">{t('clients.profile.noSessions')}</p>
+      ) : (
+        <ul
+          className="flex list-none flex-col gap-2 p-0"
+          data-testid="client-sessions"
+        >
+          {sessions.map((s, i) => (
+            <li key={s.sessionId ?? `s-${i}`}>
+              <SessionRow card={s} onPick={() => s.sessionId && goSession(s.sessionId)} />
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
+  )
+}
+
+function SessionRow({ card, onPick }: { card: ParsedCard; onPick(): void }) {
+  const t = useT()
+  const lang = useLanguage()
+  const sentiment = card.sentiment?.toLowerCase()
+  const sentimentLabelKey = sentiment ? SENTIMENT_LABEL_KEY[sentiment] : undefined
+  const sentimentLabel = sentimentLabelKey ? t(sentimentLabelKey) : null
+  const date = formatCardDate(card.createdAt, lang)
+  const summary = card.summary
+    ? card.summary.length > 110
+      ? `${card.summary.slice(0, 110)}…`
+      : card.summary
+    : null
+
+  return (
+    <button
+      type="button"
+      onClick={onPick}
+      className="flex w-full flex-col gap-1.5 rounded-card border border-line bg-surface p-3 text-left transition-colors hover:border-line-strong"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          {sentiment && sentimentLabel ? (
+            <span
+              className={cn(
+                'inline-flex rounded-tag px-2 py-0.5 text-[11px] font-medium',
+                SENTIMENT_CLASS[sentiment] ?? 'bg-surface-2 text-muted',
+              )}
+            >
+              {sentimentLabel}
+            </span>
+          ) : null}
+          {date ? <span className="text-[12px] text-muted">{date}</span> : null}
+        </div>
+        <ChevronRight className="h-4 w-4 shrink-0 text-muted-2" aria-hidden="true" />
+      </div>
+      {summary ? (
+        <p className="text-[13px] leading-snug text-ink-2">{summary}</p>
+      ) : (
+        <p className="text-[12.5px] italic text-muted">{t('clients.card.noDescription')}</p>
+      )}
+      {card.topics.length > 0 ? (
+        <div className="flex flex-wrap gap-1.5">
+          {card.topics.slice(0, 6).map((tp) => (
+            <span
+              key={tp}
+              className="rounded-full bg-surface-2 px-2 py-0.5 text-[11px] text-ink-2"
+            >
+              {tp}
+            </span>
+          ))}
+        </div>
+      ) : null}
+    </button>
   )
 }
 

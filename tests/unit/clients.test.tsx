@@ -120,4 +120,44 @@ describe('ClientsRoute', () => {
     // first top topic — appears in both top_topics chips and recent_cards JSON
     expect(screen.getAllByText(/wait_time/).length).toBeGreaterThanOrEqual(1)
   })
+
+  it('sessions tile is clickable and reveals a session list inside the drawer', async () => {
+    semanticSearch.mockResolvedValueOnce(sampleHits)
+    fetchClientProfile.mockResolvedValueOnce({
+      ...sampleProfile,
+      recent_cards: [
+        {
+          session_id: 'sess-A',
+          created_at: '2026-05-30T18:21:00Z',
+          summary_text: 'Жалоба на скорость',
+          sentiment: 'negative',
+          topics: ['wait_time'],
+        },
+        {
+          session_id: 'sess-B',
+          created_at: '2026-05-20T12:11:00Z',
+          summary_text: 'Похвала сомелье',
+          sentiment: 'positive',
+          topics: ['vino'],
+        },
+      ],
+    })
+    render(
+      <MemoryRouter initialEntries={['/clients']}>
+        <ClientsRoute />
+      </MemoryRouter>,
+    )
+    const user = userEvent.setup()
+    await user.type(screen.getByLabelText('Пошук клієнтів'), 'ожидание')
+    await screen.findByText('Клієнт 42')
+    await user.click(screen.getByText('Клієнт 42'))
+    await screen.findByText('Анна Иванова')
+
+    await user.click(screen.getByRole('button', { name: 'Переглянути сесії' }))
+
+    const list = await screen.findByTestId('client-sessions')
+    expect(list).toBeInTheDocument()
+    expect(screen.getByText('Жалоба на скорость')).toBeInTheDocument()
+    expect(screen.getByText('Похвала сомелье')).toBeInTheDocument()
+  })
 })

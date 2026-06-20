@@ -83,6 +83,36 @@ describe('ClientsRoute — name lookup', () => {
     expect(screen.getByText('Alice Cooper')).toBeInTheDocument()
     expect(semanticSearch).not.toHaveBeenCalled()
   })
+
+  it('collapses duplicate name matches into a single aggregated row', async () => {
+    fetchClientsByQuery.mockResolvedValue({
+      clients: [
+        {
+          telegram_id: 9000036,
+          name: 'Татьяна Морозова',
+          sessions_count: 2,
+          last_session_at: '2026-05-31T12:00:00Z',
+          avg_sentiment: 1.0,
+        },
+        {
+          telegram_id: 9000041,
+          name: 'Татьяна Морозова',
+          sessions_count: 1,
+          last_session_at: '2026-06-03T12:00:00Z',
+          avg_sentiment: 0,
+        },
+      ],
+    })
+    renderRoute()
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('tab', { name: "За ім'ям" }))
+    await user.type(screen.getByLabelText("Пошук за ім'ям або ID"), 'Татьяна')
+
+    expect(await screen.findByTestId('client-list')).toBeInTheDocument()
+    expect(screen.getAllByText('Татьяна Морозова')).toHaveLength(1)
+    // 2 + 1 = 3 aggregated sessions
+    expect(screen.getByText(/^3 /)).toBeInTheDocument()
+  })
 })
 
 describe('ClientsRoute — topic filter', () => {
