@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils'
 import { useT, useLanguage, dateLocale, type TranslationKey } from '@/lib/i18n'
 import type {
   ApiError,
+  ClientRef,
   ClientsMatch,
   ClientsResponse,
   SemanticHit,
@@ -158,6 +159,11 @@ function NamePanel({ onPick }: { onPick(telegramId: number): void }) {
     active ? () => fetchClientsByQuery(debounced) : null,
   )
 
+  const deduped = useMemo<ClientsResponse | null>(
+    () => (data ? { clients: dedupeClientsByName(data.clients) } : null),
+    [data],
+  )
+
   return (
     <>
       <SearchField
@@ -169,10 +175,75 @@ function NamePanel({ onPick }: { onPick(telegramId: number): void }) {
       {!active ? (
         <p className="text-sm leading-relaxed text-muted">{t('clients.byName.hint')}</p>
       ) : (
-        <ClientResults data={data} error={error} isLoading={isLoading} onPick={onPick} />
+        <ClientResults data={deduped} error={error} isLoading={isLoading} onPick={onPick} />
       )}
     </>
   )
+}
+
+/**
+ * Collapse multiple result rows for the same person into one. Backend can
+ * return one row per visited "name match" key, so the UI was showing the same
+ * client several times; group by normalised name and keep the most-active
+ * `telegram_id` as the representative, summing sessions and weighting the
+ * average sentiment by session count.
+ */
+function dedupeClientsByName(clients: ClientRef[]): ClientRef[] {
+  const groups = new Map<string, ClientRef[]>()
+  const order: string[] = []
+  for (const c of clients) {
+    const key = normaliseKey(c)
+    const bucket = groups.get(key)
+    if (bucket) {
+      bucket.push(c)
+    } else {
+      groups.set(key, [c])
+      order.push(key)
+    }
+  }
+  return order.map((key) => mergeClientGroup(groups.get(key)!))
+}
+
+function normaliseKey(c: ClientRef): string {
+  const name = c.name?.trim().toLowerCase()
+  return name && name.length > 0 ? `name:${name}` : `id:${c.telegram_id}`
+}
+
+function mergeClientGroup(group: ClientRef[]): ClientRef {
+  const [first, ...rest] = group
+  if (!first) throw new Error('mergeClientGroup called with empty group')
+  if (rest.length === 0) return first
+  const primary = group.reduce((best, c) => {
+    const bestScore = best.sessions_count ?? 0
+    const cScore = c.sessions_count ?? 0
+    if (cScore !== bestScore) return cScore > bestScore ? c : best
+    const bestWhen = new Date(best.last_session_at ?? 0).getTime()
+    const cWhen = new Date(c.last_session_at ?? 0).getTime()
+    return cWhen > bestWhen ? c : best
+  }, first)
+  const sessions_count = group.reduce((s, c) => s + (c.sessions_count ?? 0), 0)
+  const weightedSum = group.reduce(
+    (s, c) => (c.avg_sentiment != null ? s + c.avg_sentiment * (c.sessions_count ?? 0) : s),
+    0,
+  )
+  const weight = group.reduce(
+    (s, c) => (c.avg_sentiment != null ? s + (c.sessions_count ?? 0) : s),
+    0,
+  )
+  const avg_sentiment = weight > 0 ? weightedSum / weight : primary.avg_sentiment
+  const last_session_at =
+    group
+      .map((c) => c.last_session_at)
+      .filter((x): x is string => !!x)
+      .sort()
+      .at(-1) ?? null
+  return {
+    telegram_id: primary.telegram_id,
+    name: primary.name,
+    sessions_count,
+    avg_sentiment,
+    last_session_at,
+  }
 }
 
 /* ── topic multi-filter ─────────────────────────────────── */
