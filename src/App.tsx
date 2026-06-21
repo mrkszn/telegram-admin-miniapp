@@ -28,6 +28,9 @@ const SessionRoute = lazy(() =>
 const SettingsRoute = lazy(() =>
   import('@/routes/settings').then((m) => ({ default: m.SettingsRoute })),
 )
+const PrizesRoute = lazy(() =>
+  import('@/routes/prizes').then((m) => ({ default: m.PrizesRoute })),
+)
 
 function lazyRoute(node: ReactNode): ReactNode {
   return <Suspense fallback={<RouteFallback />}>{node}</Suspense>
@@ -50,6 +53,7 @@ const router = createBrowserRouter([
   { path: '/ask', element: lazyRoute(<AskRoute />) },
   { path: '/sessions/:id', element: lazyRoute(<SessionRoute />) },
   { path: '/settings', element: lazyRoute(<SettingsRoute />) },
+  { path: '/prizes', element: lazyRoute(<PrizesRoute />) },
 ])
 
 export function App() {
