@@ -37,7 +37,7 @@ const SessionRoute = lazyWithRetry(() =>
 const SettingsRoute = lazyWithRetry(() =>
   import('@/routes/settings').then((m) => ({ default: m.SettingsRoute })),
 )
-const PrizesRoute = lazy(() =>
+const PrizesRoute = lazyWithRetry(() =>
   import('@/routes/prizes').then((m) => ({ default: m.PrizesRoute })),
 )
 
