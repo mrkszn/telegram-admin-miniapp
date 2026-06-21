@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { AppShell } from '@/components/layout/AppShell'
 import { BackButton } from '@/components/layout/BackButton'
 import { SegmentedControl } from '@/components/ui/segmented'
@@ -115,6 +115,15 @@ function SettingsForm({ initial }: { initial: AdminSettings }) {
           <span className="text-danger">{t('settings.saveError')}</span>
         ) : null}
       </div>
+
+      <Section title={t('title.prizes')} description={t('prizes.link.description')}>
+        <Link
+          to="/prizes"
+          className="inline-flex h-10 items-center justify-center rounded-input border border-line bg-surface px-4 text-sm font-medium text-ink transition-colors hover:bg-surface-2"
+        >
+          {t('nav.prizes')} →
+        </Link>
+      </Section>
     </>
   )
 }

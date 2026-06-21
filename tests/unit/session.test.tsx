@@ -33,6 +33,7 @@ const sample: SessionDetail = {
     { question_text: 'Оцініть сервіс', answer_text: 'Відмінно', marked_value: '5' },
   ],
   card_summary: 'ok',
+  journey: null,
 }
 
 function renderAt(id: string) {
@@ -74,6 +75,45 @@ describe('SessionRoute', () => {
     fetchSessionDetail.mockRejectedValueOnce({ status: 500, message: 'boom' })
     renderAt('s-1')
     expect(await screen.findByRole('alert')).toBeInTheDocument()
+  })
+
+  it('renders the JourneyRibbon above the transcript for web sessions', async () => {
+    fetchSessionDetail.mockResolvedValueOnce({
+      ...sample,
+      source: 'web',
+      messages: [],
+      journey: {
+        mode: 'targeted',
+        meal_occasion: 'dinner',
+        beats: [
+          {
+            label_uk: 'Заход',
+            emoji: '🚪',
+            score: 4,
+            transcription_uk: 'Привітали швидко',
+            tags: ['швидко'],
+          },
+          {
+            label_uk: 'Їжа',
+            emoji: '🍝',
+            score: null,
+            transcription_uk: null,
+            tags: [],
+          },
+        ],
+      },
+    })
+    renderAt('s-1')
+
+    expect(await screen.findByText('Alice Cooper')).toBeInTheDocument()
+    expect(screen.getByText('Гейміфікація')).toBeInTheDocument()
+    expect(screen.getByText(/Візит: вечеря/)).toBeInTheDocument()
+    expect(screen.getByText('Заход')).toBeInTheDocument()
+    expect(screen.getByText('4/5')).toBeInTheDocument()
+    expect(screen.getByText('Привітали швидко')).toBeInTheDocument()
+    expect(screen.getByText('швидко')).toBeInTheDocument()
+    // missing-score beat falls back to the em-dash
+    expect(screen.getByText('Їжа')).toBeInTheDocument()
   })
 
   it('renders an object-valued marked_value without crashing (regression: React #31)', async () => {
