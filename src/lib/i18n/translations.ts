@@ -212,6 +212,18 @@ export const uk = {
   'root.authorizing': 'Авторизація…',
   'root.initializing': 'Ініціалізація…',
 
+  // web login (Telegram Login Widget) ------------------------
+  'webLogin.title': 'Увійти в InsightFlow Admin',
+  'webLogin.subtitle': 'Доступ обмежений власником закладу.',
+  'webLogin.cta': 'Увійти через Telegram',
+  'webLogin.error': 'Не вдалося увійти. Спробуй ще.',
+  'webLogin.retry': 'Спробувати знову',
+  'webLogin.missingConfig':
+    'Не налаштовано імʼя бота: задайте VITE_TELEGRAM_BOT_NAME у середовищі.',
+  'webLogin.notAuthorized': 'Доступ заборонено для цього Telegram-акаунта.',
+  'webLogin.widgetUnavailable':
+    'Не вдалося завантажити віджет Telegram. Перевірте зʼєднання та налаштування домену в @BotFather.',
+
   // drill-down: clients list ---------------------------------
   'clients.list.sessions': 'сесій',
   'clients.byTopic': 'Клієнти за темою',
@@ -476,6 +488,17 @@ export const en: Record<TranslationKey, TranslationEntry> = {
   'root.openViaTelegram': 'Open the app via Telegram to obtain initData.',
   'root.authorizing': 'Authorizing…',
   'root.initializing': 'Initializing…',
+
+  'webLogin.title': 'Sign in to InsightFlow Admin',
+  'webLogin.subtitle': 'Access is restricted to the venue owner.',
+  'webLogin.cta': 'Sign in with Telegram',
+  'webLogin.error': "Couldn't sign in. Try again.",
+  'webLogin.retry': 'Try again',
+  'webLogin.missingConfig':
+    'Bot username is not configured: set VITE_TELEGRAM_BOT_NAME in your environment.',
+  'webLogin.notAuthorized': 'This Telegram account is not authorised.',
+  'webLogin.widgetUnavailable':
+    "Couldn't load the Telegram widget. Check your connection and the @BotFather domain setting.",
 
   'clients.list.sessions': 'sessions',
   'clients.byTopic': 'Clients by topic',
