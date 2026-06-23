@@ -2,6 +2,8 @@ import { Navigate } from 'react-router-dom'
 import { AlertCircle } from 'lucide-react'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { BrandSpinner } from '@/components/feedback/BrandSpinner'
+import { TelegramLoginGate } from '@/components/auth/TelegramLoginGate'
+import { isInsideTelegram } from '@/lib/telegram/sdk'
 import { readLastTab } from '@/lib/state/view-prefs'
 import { useT } from '@/lib/i18n'
 
@@ -13,6 +15,12 @@ export function RootRoute() {
     // Land back on the last visited tab (persisted across restarts), not
     // always /dashboard.
     return <Navigate to={readLastTab()} replace />
+  }
+  // Outside Telegram: render the Login Widget gate. It owns its own
+  // spinner / error / retry UI, so the legacy "open via Telegram" panel
+  // only fires inside Telegram (e.g. expired initData).
+  if (!isInsideTelegram()) {
+    return <TelegramLoginGate />
   }
   if (error) {
     return (

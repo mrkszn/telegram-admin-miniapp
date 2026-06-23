@@ -70,6 +70,84 @@ function joinUrl(base: string, path: string): string {
   return `${b}${p}`
 }
 
+/* ── web login (Telegram Login Widget) ───────────────────── */
+
+/**
+ * Shape returned by the Telegram Login Widget JS callback. We hand it back
+ * to the backend untouched — the HMAC over these fields is what proves the
+ * payload came from Telegram.
+ *
+ * Spec: https://core.telegram.org/widgets/login#receiving-authorization-data
+ */
+export interface TelegramWidgetPayload {
+  id: number
+  first_name: string
+  last_name?: string
+  username?: string
+  photo_url?: string
+  auth_date: number
+  hash: string
+}
+
+export interface BootstrapAuthWebOptions {
+  apiBaseUrl: string
+  /** Backend endpoint that accepts the widget payload. Defaults to /admin/auth/web. */
+  authEndpoint: string
+  fetcher?: typeof fetch
+}
+
+/**
+ * Exchanges a Telegram Login Widget payload for a JWT against the configured
+ * backend. Mirrors `bootstrapAuth()` shape so the store / hook contract is
+ * identical — callers only branch on which entry point fires.
+ */
+export async function bootstrapAuthWeb(
+  payload: TelegramWidgetPayload,
+  opts: BootstrapAuthWebOptions,
+): Promise<AuthResponse> {
+  const { apiBaseUrl, authEndpoint, fetcher = fetch } = opts
+  const store = useSessionStore.getState()
+  store.setBootstrapping(true)
+  store.setError(null)
+  try {
+    const url = joinUrl(apiBaseUrl, authEndpoint)
+    const response = await fetcher(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    if (!response.ok) {
+      throw new Error(`Auth failed: HTTP ${response.status}`)
+    }
+    const data = (await response.json()) as AuthResponse
+    if (!data?.token) {
+      throw new Error('Auth response missing token')
+    }
+    const sessionUser = mergeWebUser(payload, data.user)
+    useSessionStore.getState().setSession(data.token, sessionUser)
+    return data
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown auth error'
+    useSessionStore.getState().setError(message)
+    throw err
+  } finally {
+    useSessionStore.getState().setBootstrapping(false)
+  }
+}
+
+function mergeWebUser(
+  payload: TelegramWidgetPayload,
+  apiUser: AuthResponse['user'],
+): SessionUser {
+  return {
+    telegramId: apiUser?.telegram_id ?? payload.id,
+    firstName: apiUser?.first_name ?? payload.first_name,
+    lastName: apiUser?.last_name ?? payload.last_name,
+    username: apiUser?.username ?? payload.username,
+    languageCode: apiUser?.language_code,
+  }
+}
+
 function mergeUser(
   tgUser: TelegramInitUser | undefined,
   apiUser: AuthResponse['user'],
