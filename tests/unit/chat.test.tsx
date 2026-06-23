@@ -129,7 +129,12 @@ describe('ChatRoute', () => {
     expect(useChatStore.getState().isBusy).toBe(false)
   })
 
-  it('on 401 re-bootstraps auth and retries transparently', async () => {
+  it('on 401 inside Telegram: re-bootstraps auth and retries transparently', async () => {
+    // Inside-Telegram path: a Telegram WebApp global with initData makes
+    // isInsideTelegram() return true so chat-store hits the silent
+    // re-bootstrap branch instead of the web-login bounce.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(window as any).Telegram = { WebApp: { initData: 'init=xyz' } }
     askAdmin
       .mockRejectedValueOnce({
         isAxiosError: true,
@@ -143,17 +148,22 @@ describe('ChatRoute', () => {
       })
     bootstrapAuth.mockResolvedValueOnce(undefined as unknown as void)
 
-    render(
-      <MemoryRouter initialEntries={['/']}>
-        <ChatRoute />
-      </MemoryRouter>,
-    )
-    const user = userEvent.setup()
-    await user.type(screen.getByLabelText('Повідомлення'), 'привіт')
-    await user.click(screen.getByRole('button', { name: 'Відправити' }))
+    try {
+      render(
+        <MemoryRouter initialEntries={['/']}>
+          <ChatRoute />
+        </MemoryRouter>,
+      )
+      const user = userEvent.setup()
+      await user.type(screen.getByLabelText('Повідомлення'), 'привіт')
+      await user.click(screen.getByRole('button', { name: 'Відправити' }))
 
-    await waitFor(() => expect(bootstrapAuth).toHaveBeenCalledTimes(1))
-    expect(askAdmin).toHaveBeenCalledTimes(2)
-    expect(await screen.findByText('після retry')).toBeInTheDocument()
+      await waitFor(() => expect(bootstrapAuth).toHaveBeenCalledTimes(1))
+      expect(askAdmin).toHaveBeenCalledTimes(2)
+      expect(await screen.findByText('після retry')).toBeInTheDocument()
+    } finally {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      delete (window as any).Telegram
+    }
   })
 })

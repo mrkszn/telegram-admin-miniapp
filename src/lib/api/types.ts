@@ -158,13 +158,51 @@ export interface SessionAnswer {
    */
   marked_value: unknown
 }
+
+/** Mode of the guest-web journey: plain survey vs. gamified flow. */
+export type JourneyMode = 'non_targeted' | 'targeted'
+export type MealOccasion = 'breakfast' | 'lunch' | 'dinner' | 'other'
+
+export interface JourneyBeat {
+  label_uk: string
+  emoji: string
+  score: number | null
+  transcription_uk: string | null
+  tags: string[]
+}
+
+/** Present only for web / web_anon sessions (Phase C). */
+export interface SessionJourney {
+  mode: JourneyMode
+  meal_occasion: MealOccasion | null
+  beats: JourneyBeat[]
+}
+
 /** GET /admin/sessions/{id} — full timeline. */
 export interface SessionDetail extends SessionRef {
   summary: string | null
   messages: SessionMessage[]
   answers: SessionAnswer[]
   card_summary: string | null
+  journey: SessionJourney | null
 }
+
+// --- prizes -------------------------------------------------
+export type PrizeTier = 'small' | 'medium' | 'large'
+
+export interface PrizeTierOut {
+  tier: PrizeTier
+  code: string
+  label_uk: string
+  label_en: string
+}
+
+export interface PrizesResponse {
+  prizes: PrizeTierOut[]
+}
+
+/** PUT /admin/prizes/{tier} — partial update. */
+export type PrizeTierUpdate = Partial<Pick<PrizeTierOut, 'code' | 'label_uk' | 'label_en'>>
 
 /** Row returned by topic→clients, category→clients and /admin/clients. */
 export interface ClientRef {

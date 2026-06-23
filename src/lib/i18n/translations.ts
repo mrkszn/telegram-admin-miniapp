@@ -228,6 +228,18 @@ export const uk = {
   'root.authorizing': 'Авторизація…',
   'root.initializing': 'Ініціалізація…',
 
+  // web login (Telegram Login Widget) ------------------------
+  'webLogin.title': 'Увійти в InsightFlow Admin',
+  'webLogin.subtitle': 'Доступ обмежений власником закладу.',
+  'webLogin.cta': 'Увійти через Telegram',
+  'webLogin.error': 'Не вдалося увійти. Спробуй ще.',
+  'webLogin.retry': 'Спробувати знову',
+  'webLogin.missingConfig':
+    'Не налаштовано імʼя бота: задайте VITE_TELEGRAM_BOT_NAME у середовищі.',
+  'webLogin.notAuthorized': 'Доступ заборонено для цього Telegram-акаунта.',
+  'webLogin.widgetUnavailable':
+    'Не вдалося завантажити віджет Telegram. Перевірте зʼєднання та налаштування домену в @BotFather.',
+
   // drill-down: clients list ---------------------------------
   'clients.list.sessions': 'сесій',
   'clients.byTopic': 'Клієнти за темою',
@@ -254,6 +266,33 @@ export const uk = {
   'session.answers': 'Відповіді',
   'session.transcript': 'Діалог',
   'session.noMessages': 'У цій сесії немає повідомлень.',
+
+  // session journey ribbon -----------------------------------
+  'journey.title': 'Вечір',
+  'journey.mode.non_targeted': 'Опитування',
+  'journey.mode.targeted': 'Гейміфікація',
+  'journey.meal.label': 'Візит',
+  'journey.meal.breakfast': 'сніданок',
+  'journey.meal.lunch': 'обід',
+  'journey.meal.dinner': 'вечеря',
+  'journey.meal.other': 'інше',
+  'journey.beat.noScore': '—',
+  'journey.beat.noTranscription': 'Без коментаря',
+  'journey.beat.score': ({ score }: TranslationParams) => `${score}/5`,
+
+  // prizes admin ---------------------------------------------
+  'prizes.loading': 'Завантаження призів…',
+  'prizes.tier.small': 'Маленький',
+  'prizes.tier.medium': 'Середній',
+  'prizes.tier.large': 'Великий',
+  'prizes.field.code': 'Код',
+  'prizes.field.label_uk': 'Назва (UK)',
+  'prizes.field.label_en': 'Назва (EN)',
+  'prizes.save': 'Зберегти',
+  'prizes.saving': 'Збереження…',
+  'prizes.saved': 'Збережено',
+  'prizes.saveError': 'Не вдалося зберегти.',
+  'prizes.link.description': 'Коди та назви призів для гостьового додатка.',
 
   // dashboard drill-down aria labels -------------------------
   'dashboard.drill.sessions': 'Переглянути сесії',
@@ -290,11 +329,6 @@ export const uk = {
   'metricKey.price_value': 'Співвідношення ціна/якість',
   'metricKey.staff_friendliness': 'Дружелюбність персоналу',
   'metricKey.improvement_wish': 'Побажання',
-
-  // prizes (placeholder route surfaced from the drawer) -------
-  'prizes.empty.title': 'Призи',
-  'prizes.empty.body':
-    'Розділ призів готується. Скоро тут зʼявиться список заохочень, статистика розіграшів і налаштування правил.',
 } satisfies Record<string, TranslationEntry>
 
 export type TranslationKey = keyof typeof uk
@@ -483,6 +517,17 @@ export const en: Record<TranslationKey, TranslationEntry> = {
   'root.authorizing': 'Authorizing…',
   'root.initializing': 'Initializing…',
 
+  'webLogin.title': 'Sign in to InsightFlow Admin',
+  'webLogin.subtitle': 'Access is restricted to the venue owner.',
+  'webLogin.cta': 'Sign in with Telegram',
+  'webLogin.error': "Couldn't sign in. Try again.",
+  'webLogin.retry': 'Try again',
+  'webLogin.missingConfig':
+    'Bot username is not configured: set VITE_TELEGRAM_BOT_NAME in your environment.',
+  'webLogin.notAuthorized': 'This Telegram account is not authorised.',
+  'webLogin.widgetUnavailable':
+    "Couldn't load the Telegram widget. Check your connection and the @BotFather domain setting.",
+
   'clients.list.sessions': 'sessions',
   'clients.byTopic': 'Clients by topic',
 
@@ -506,6 +551,31 @@ export const en: Record<TranslationKey, TranslationEntry> = {
   'session.answers': 'Answers',
   'session.transcript': 'Transcript',
   'session.noMessages': 'This session has no messages.',
+
+  'journey.title': 'Evening',
+  'journey.mode.non_targeted': 'Survey',
+  'journey.mode.targeted': 'Gamified',
+  'journey.meal.label': 'Visit',
+  'journey.meal.breakfast': 'breakfast',
+  'journey.meal.lunch': 'lunch',
+  'journey.meal.dinner': 'dinner',
+  'journey.meal.other': 'other',
+  'journey.beat.noScore': '—',
+  'journey.beat.noTranscription': 'No comment',
+  'journey.beat.score': ({ score }: TranslationParams) => `${score}/5`,
+
+  'prizes.loading': 'Loading prizes…',
+  'prizes.tier.small': 'Small',
+  'prizes.tier.medium': 'Medium',
+  'prizes.tier.large': 'Large',
+  'prizes.field.code': 'Code',
+  'prizes.field.label_uk': 'Label (UK)',
+  'prizes.field.label_en': 'Label (EN)',
+  'prizes.save': 'Save',
+  'prizes.saving': 'Saving…',
+  'prizes.saved': 'Saved',
+  'prizes.saveError': "Couldn't save.",
+  'prizes.link.description': 'Codes and labels for prizes in the guest app.',
 
   'dashboard.drill.sessions': 'View sessions',
   'dashboard.drill.topics': 'View topics',
@@ -536,10 +606,6 @@ export const en: Record<TranslationKey, TranslationEntry> = {
   'metricKey.price_value': 'Price / value',
   'metricKey.staff_friendliness': 'Staff friendliness',
   'metricKey.improvement_wish': 'Suggestions',
-
-  'prizes.empty.title': 'Prizes',
-  'prizes.empty.body':
-    'The prizes section is coming soon — it will list rewards, draw stats, and rule configuration.',
 }
 
 export const translations: Record<Language, Record<TranslationKey, TranslationEntry>> = {

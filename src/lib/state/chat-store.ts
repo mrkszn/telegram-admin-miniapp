@@ -2,6 +2,8 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { askAdmin } from '@/lib/api/admin'
 import { bootstrapAuth } from '@/lib/telegram/auth'
+import { isInsideTelegram } from '@/lib/telegram/sdk'
+import { useSessionStore } from '@/lib/state/session-store'
 import { toApiError } from '@/lib/api/client'
 import { getLanguage, translate } from '@/lib/i18n'
 import type { AskHistoryItem, AskResponse } from '@/lib/api/types'
@@ -70,6 +72,15 @@ async function submitAskWithRetry(
   } catch (err) {
     const apiErr = toApiError(err)
     if (apiErr.status !== 401) throw err
+    // Inside Telegram we silently re-exchange initData for a fresh JWT and
+    // retry. Outside Telegram there's no silent path — clearing the session
+    // bounces RootRoute to <TelegramLoginGate> so the user re-authenticates
+    // via the widget. Rethrowing the original 401 keeps the chat-store
+    // failure branch authoritative for the toast.
+    if (!isInsideTelegram()) {
+      useSessionStore.getState().clear()
+      throw err
+    }
     await bootstrapAuth({
       apiBaseUrl: import.meta.env.VITE_API_BASE_URL ?? '',
       authEndpoint: import.meta.env.VITE_AUTH_ENDPOINT ?? '/admin/auth',

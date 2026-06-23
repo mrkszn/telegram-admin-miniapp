@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/hooks/useAuth'
 import { BrandSpinner } from '@/components/feedback/BrandSpinner'
 import { BgBubbles } from '@/components/feedback/BgBubbles'
 import { BrandMark } from '@/components/brand/BrandMark'
+import { TelegramLoginGate } from '@/components/auth/TelegramLoginGate'
 import { useT } from '@/lib/i18n'
 
 interface AuthGateProps {
@@ -11,24 +12,30 @@ interface AuthGateProps {
 }
 
 /**
- * Gates the entire router on Telegram auth. Until `useAuth` reports ready,
- * we paint a branded splash (bubbles + BrandMark + spinner) so the user
- * never sees a raw white screen during init. On error we surface the
- * "open via Telegram" instruction inline.
+ * Gates the entire router on auth. Three branches:
+ *
+ *  1. inside Telegram, ready  → render children
+ *  2. outside Telegram + not signed in → render <TelegramLoginGate /> (the
+ *     web subdomain's Login-Widget flow owns its own spinner / error UI)
+ *  3. inside Telegram, still bootstrapping or errored → branded splash with
+ *     BgBubbles + BrandMark + BrandSpinner (or the "open via Telegram"
+ *     error card when initData is rejected)
+ *
+ * `isolate` opens a local stacking context so BgBubbles' `-z-10` stays
+ * inside the splash instead of escaping past the page background and
+ * rendering invisible.
  *
  * Replaces the old `RootRoute → Navigate to readLastTab()` indirection —
- * the landing is now always the chat at `/`, so this gate just renders
- * children once we have a JWT.
+ * the route at `/` is now `LandingRouter`, which handles the cold/warm
+ * tab-restore split once we're past this gate.
  */
 export function AuthGate({ children }: AuthGateProps) {
   const t = useT()
-  const { isReady, isBootstrapping, error } = useAuth()
+  const { isReady, isBootstrapping, error, needsWebLogin } = useAuth()
 
   if (isReady) return <>{children}</>
+  if (needsWebLogin) return <TelegramLoginGate />
 
-  // Shared splash scaffold — `isolate` opens a local stacking context so
-  // BgBubbles' -z-10 stays inside the splash instead of escaping past the
-  // page background and rendering invisible.
   return (
     <main className="relative isolate flex min-h-screen flex-col items-center justify-center bg-bg px-6 text-ink">
       <BgBubbles />

@@ -19,6 +19,10 @@ import type {
   ClientsResponse,
   MetricsResponse,
   OverviewResponse,
+  PrizeTier,
+  PrizeTierOut,
+  PrizeTierUpdate,
+  PrizesResponse,
   QuestionsResponse,
   SemanticSearchRequest,
   SemanticSearchResponse,
@@ -213,5 +217,25 @@ export async function fetchClientsByTopics(
     params: { topics, match },
     paramsSerializer: { indexes: null },
   })
+  return data
+}
+
+/* ── prizes config (Phase C) ────────────────────────────────── */
+
+export async function getPrizes(override?: AxiosInstance): Promise<PrizesResponse> {
+  const { data } = await client(override).get<PrizesResponse>('/admin/prizes')
+  return data
+}
+
+/** Partial update — only the changed keys need to be sent. */
+export async function updatePrize(
+  tier: PrizeTier,
+  body: PrizeTierUpdate,
+  override?: AxiosInstance,
+): Promise<PrizeTierOut> {
+  const { data } = await client(override).put<PrizeTierOut>(
+    `/admin/prizes/${encodeURIComponent(tier)}`,
+    body,
+  )
   return data
 }

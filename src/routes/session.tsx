@@ -3,6 +3,7 @@ import { AppShell } from '@/components/layout/AppShell'
 import { BackButton } from '@/components/layout/BackButton'
 import { Message } from '@/components/chat/Message'
 import { AskAiMarker } from '@/components/chat/AskAiMarker'
+import { JourneyRibbon } from '@/components/JourneyRibbon'
 import { SentimentChip } from '@/components/sessions/SentimentChip'
 import { BrandSpinner } from '@/components/feedback/BrandSpinner'
 import { ErrorState } from '@/components/feedback/ErrorState'
@@ -126,6 +127,15 @@ function sections(
           ))}
         </div>
       ),
+    })
+  }
+
+  if (detail.journey) {
+    const journey = detail.journey
+    out.push({
+      key: 'journey',
+      title: t('journey.title'),
+      node: <JourneyRibbon journey={journey} />,
     })
   }
 

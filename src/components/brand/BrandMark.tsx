@@ -3,8 +3,10 @@ import { cn } from '@/lib/utils'
 export type BrandMarkVariant = 'gradient' | 'mono' | 'outline'
 
 interface BrandMarkProps {
-  /** Tile edge length in px. Drives radius (~size * 0.25) and glyph size. */
+  /** Tile edge length in px. Drives glyph size and the default radius (~size * 0.25). */
   size?: number
+  /** Optional border-radius override in px. Defaults to `Math.round(size * 0.25)`. */
+  radius?: number
   /** `gradient` = the full violet wash (default). `mono` = solid --ink for
    *  favicon-style mono renders. `outline` = subtle bordered tile for
    *  inverted brand contexts. */
@@ -21,11 +23,12 @@ interface BrandMarkProps {
  */
 export function BrandMark({
   size = 32,
+  radius,
   variant = 'gradient',
   className,
   ariaLabel,
 }: BrandMarkProps) {
-  const radius = Math.round(size * 0.25)
+  const r = radius ?? Math.round(size * 0.25)
   const glyphSize = Math.round(size * 0.66)
   const decorative = ariaLabel == null
   const variantClass =
@@ -47,7 +50,7 @@ export function BrandMark({
       style={{
         width: size,
         height: size,
-        borderRadius: radius,
+        borderRadius: r,
         fontSize: glyphSize,
       }}
     >
