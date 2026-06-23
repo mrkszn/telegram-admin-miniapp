@@ -49,17 +49,59 @@
     border-radius: var(--r-card);
     padding: var(--card-pad);
   }
+
+  /* BgOrbs primitives — geometry/positioning here, keyframes below. Tuned
+     ~30% smaller than the web-survey orbs so they read on 375px viewports
+     without dwarfing the chrome. */
+  .bg-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(72px);
+    will-change: transform;
+  }
+  .bg-orb--a {
+    width: 320px;
+    height: 320px;
+    top: -10%;
+    left: -8%;
+    background: var(--primary-bright);
+    opacity: 0.45;
+    animation: orb-a 22s ease-in-out infinite;
+  }
+  .bg-orb--b {
+    width: 260px;
+    height: 260px;
+    top: 42%;
+    right: -12%;
+    background: var(--accent);
+    opacity: 0.30;
+    animation: orb-b 28s ease-in-out infinite;
+  }
+  .bg-orb--c {
+    width: 300px;
+    height: 300px;
+    bottom: -18%;
+    left: 28%;
+    background: var(--primary);
+    opacity: 0.38;
+    animation: orb-c 26s ease-in-out infinite;
+  }
 }
 
 /* ── animations ─────────────────────────────────────────── */
 
-@keyframes bg-particle-drift {
-  0% {
-    transform: translate3d(0, 0, 0);
-  }
-  100% {
-    transform: translate3d(var(--p-drift, 40px), calc(var(--p-drift, 40px) * -0.6), 0);
-  }
+/* ── BgOrbs — drifting hero orbs (insightflow2.html port) ─ */
+@keyframes orb-a {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%      { transform: translate3d(40px, 28px, 0) scale(1.12); }
+}
+@keyframes orb-b {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%      { transform: translate3d(-34px, -22px, 0) scale(1.08); }
+}
+@keyframes orb-c {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%      { transform: translate3d(28px, -36px, 0) scale(1.15); }
 }
 
 @keyframes brand-pulse {
@@ -127,7 +169,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bg-particle,
+  .bg-orb,
   .animate-spin-slow,
   .animate-brand-pulse,
   .animate-fade-rise,

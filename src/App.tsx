@@ -2,7 +2,7 @@ import { Suspense, useEffect, type ReactNode } from 'react'
 import { RouterProvider, createBrowserRouter } from 'react-router-dom'
 import { ThemeProvider } from '@/components/layout/ThemeProvider'
 import { LanguageSync } from '@/lib/i18n/LanguageSync'
-import { BgParticles } from '@/components/feedback/BgParticles'
+import { BgOrbs } from '@/components/feedback/BgOrbs'
 import { BrandSpinner } from '@/components/feedback/BrandSpinner'
 import { RouteErrorBoundary } from '@/components/feedback/RouteErrorBoundary'
 import { lazyWithRetry, clearChunkReloadFlag } from '@/lib/lazy-with-retry'
@@ -79,7 +79,7 @@ export function App() {
   return (
     <ThemeProvider>
       <LanguageSync />
-      <BgParticles />
+      <BgOrbs />
       <RouterProvider router={router} />
     </ThemeProvider>
   )
