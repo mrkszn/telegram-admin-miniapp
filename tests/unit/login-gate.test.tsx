@@ -74,14 +74,51 @@ describe('TelegramLoginGate', () => {
     expect(bootstrapAuthWeb).toHaveBeenCalledWith(payload)
   })
 
-  it('shows the error + retry button when sign-in fails', async () => {
+  it('dedupes a double-fired onauth callback so /admin/auth/web is hit once', async () => {
+    // Resolve only after both calls would have landed.
+    let resolveCall: ((v: { token: string }) => void) | null = null
+    bootstrapAuthWeb.mockImplementation(
+      () => new Promise((r) => (resolveCall = r)),
+    )
+    render(<TelegramLoginGate />)
+    const payload: TelegramWidgetPayload = {
+      id: 42,
+      first_name: 'Alex',
+      auth_date: 1719000000,
+      hash: 'abc',
+    }
+    await act(async () => {
+      window.onTelegramAuth?.(payload)
+      window.onTelegramAuth?.(payload)
+    })
+    expect(bootstrapAuthWeb).toHaveBeenCalledTimes(1)
+    await act(async () => {
+      resolveCall?.({ token: 'jwt-web' })
+    })
+  })
+
+  it('shows the error + retry button when sign-in fails and clears the store error on Retry', async () => {
     useSessionStore.getState().setError('HTTP 403')
     render(<TelegramLoginGate />)
     expect(await screen.findByText(/Не вдалося увійти/)).toBeInTheDocument()
     const retry = screen.getByRole('button', { name: 'Спробувати знову' })
     const user = userEvent.setup()
-    // Re-mounting the script tag is the only side-effect; assert it doesn't crash.
     await user.click(retry)
-    expect(retry).toBeInTheDocument()
+    // Store error is cleared so the alert next to the freshly remounted
+    // widget stops shouting.
+    expect(useSessionStore.getState().error).toBeNull()
+  })
+
+  it('surfaces webLogin.widgetUnavailable when the widget script fails to load', async () => {
+    render(<TelegramLoginGate />)
+    const slot = screen.getByLabelText('Увійти через Telegram')
+    const script = slot.querySelector('script') as HTMLScriptElement
+    expect(script).not.toBeNull()
+    await act(async () => {
+      script.dispatchEvent(new Event('error'))
+    })
+    expect(
+      await screen.findByText(/Не вдалося завантажити віджет Telegram/),
+    ).toBeInTheDocument()
   })
 })
