@@ -31,9 +31,8 @@
 }
 
 @layer components {
-  /* Display numerals — Geist tabular figures. Class name kept as `.serif-num`
-     for backward compatibility with components that already reference it;
-     the actual font is whatever --font-head resolves to (currently Geist). */
+  /* Display numerals — Instrument Serif italic. The InsightFlow editorial
+     signature: KPI values, section indices, hero titles. */
   .serif-num {
     font-family: var(--font-head);
     font-style: var(--head-style);
@@ -48,6 +47,14 @@
     border: 1px solid var(--line);
     border-radius: var(--r-card);
     padding: var(--card-pad);
+  }
+
+  /* Brand-gradient text utility — used in the drawer wordmark + splash. */
+  .text-grad-brand {
+    background-image: var(--grad-brand);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 }
 
@@ -126,13 +133,40 @@
   }
 }
 
+@keyframes bubble-rise {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .bg-particle,
+  .bg-bubble,
   .animate-spin-slow,
   .animate-brand-pulse,
   .animate-fade-rise,
-  .animate-shimmer {
+  .animate-shimmer,
+  .animate-bubble-rise {
     animation: none !important;
+  }
+}
+
+@layer utilities {
+  .animate-bubble-rise {
+    animation: bubble-rise 700ms cubic-bezier(0.2, 0, 0, 1) both;
+  }
+  /* Brand gradient background — `bg-grad-brand` utility for hero CTAs,
+     drawer accents, brand mark fills. */
+  .bg-grad-brand {
+    background-image: var(--grad-brand);
+  }
+  .bg-grad-hero {
+    background-image: var(--grad-hero);
   }
 }
 

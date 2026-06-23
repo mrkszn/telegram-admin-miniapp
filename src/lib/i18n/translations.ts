@@ -47,25 +47,40 @@ export const uk = {
   'nav.aria': 'Основна навігація',
   'nav.agentBusy': 'Агент готує відповідь',
 
-  // nav bottom slots ------------------------------------------
-  'nav.dashboard': 'Головна',
+  // drawer (Claude-style left sidebar) ------------------------
+  'drawer.open': 'Меню',
+  'drawer.close': 'Закрити меню',
+  'drawer.title': 'Навігація',
+  'drawer.aria': 'Бічна панель',
+  'drawer.description': 'Розділи та налаштування додатку.',
+  'drawer.language.cycle': 'Перемкнути мову',
+
+  // nav drawer slots ------------------------------------------
+  'nav.chat': 'Чат',
+  'nav.dashboard': 'Зведення',
   'nav.metrics': 'Метрики',
   'nav.topics': 'Теми',
   'nav.clients': 'Клієнти',
-  'nav.ask': 'Чат',
+  'nav.prizes': 'Призи',
+  'nav.settings': 'Налаштування',
 
   // page titles -----------------------------------------------
   'title.dashboard': 'Зведення',
   'title.metrics': 'Метрики',
   'title.topics': 'Теми',
   'title.clients': 'Клієнти',
-  'title.ask': 'Чат',
+  'title.chat': 'Чат',
+  'title.prizes': 'Призи',
   'title.settings': 'Налаштування',
 
-  // theme toggle (top-level, kept) ----------------------------
+  // theme toggle (full label, used for aria) ------------------
   'themeToggle.auto': 'Тема: авто',
   'themeToggle.light': 'Тема: світла',
   'themeToggle.dark': 'Тема: темна',
+  // theme toggle (short label, used inside the drawer chip) ---
+  'themeCycle.auto': 'Авто',
+  'themeCycle.light': 'Світла',
+  'themeCycle.dark': 'Темна',
 
   // settings button -------------------------------------------
   'settingsButton.aria': 'Налаштування',
@@ -182,15 +197,16 @@ export const uk = {
   'clients.cardSentiment.negative': 'негативний',
 
   // ask / chat ------------------------------------------------
-  'ask.prompt.1': 'Топ-3 скарги за тиждень',
+  'ask.prompt.1': 'Топ скарг тижня',
   'ask.prompt.2': 'Зведення за 30 днів',
-  'ask.prompt.3': 'Що хвалять клієнти',
+  'ask.prompt.3': 'Хто хвалить сервіс',
   'ask.prompt.4': 'Знайди скарги на швидкість',
-  'ask.placeholder': 'Запитайте про метрики або клієнтів…',
-  'ask.empty.title': 'Запитайте про дані.',
+  'ask.placeholder': 'Спитай про feedback…',
+  'ask.empty.title': 'Спитай про feedback.',
   'ask.empty.body':
-    'Агент сходить у метрики, теми та клієнтів і поверне зведення. Можна перейти на іншу вкладку, поки він рахує — відповідь дочекається вас тут.',
+    'Я відповім за даними сесій: метрики, теми, клієнти. Можна перейти в інший розділ, поки агент рахує — відповідь дочекається вас тут.',
   'ask.failed': 'Не вдалося отримати відповідь.',
+  'ask.newChat': 'Новий чат',
 
   // chat widget ----------------------------------------------
   'chat.placeholder': 'Повідомлення…',
@@ -274,6 +290,11 @@ export const uk = {
   'metricKey.price_value': 'Співвідношення ціна/якість',
   'metricKey.staff_friendliness': 'Дружелюбність персоналу',
   'metricKey.improvement_wish': 'Побажання',
+
+  // prizes (placeholder route surfaced from the drawer) -------
+  'prizes.empty.title': 'Призи',
+  'prizes.empty.body':
+    'Розділ призів готується. Скоро тут зʼявиться список заохочень, статистика розіграшів і налаштування правил.',
 } satisfies Record<string, TranslationEntry>
 
 export type TranslationKey = keyof typeof uk
@@ -298,22 +319,35 @@ export const en: Record<TranslationKey, TranslationEntry> = {
   'nav.aria': 'Main navigation',
   'nav.agentBusy': 'Agent is preparing a response',
 
-  'nav.dashboard': 'Home',
+  'drawer.open': 'Menu',
+  'drawer.close': 'Close menu',
+  'drawer.title': 'Navigation',
+  'drawer.aria': 'Side panel',
+  'drawer.description': 'App sections and settings.',
+  'drawer.language.cycle': 'Switch language',
+
+  'nav.chat': 'Chat',
+  'nav.dashboard': 'Overview',
   'nav.metrics': 'Metrics',
   'nav.topics': 'Topics',
   'nav.clients': 'Clients',
-  'nav.ask': 'Chat',
+  'nav.prizes': 'Prizes',
+  'nav.settings': 'Settings',
 
   'title.dashboard': 'Overview',
   'title.metrics': 'Metrics',
   'title.topics': 'Topics',
   'title.clients': 'Clients',
-  'title.ask': 'Chat',
+  'title.chat': 'Chat',
+  'title.prizes': 'Prizes',
   'title.settings': 'Settings',
 
   'themeToggle.auto': 'Theme: auto',
   'themeToggle.light': 'Theme: light',
   'themeToggle.dark': 'Theme: dark',
+  'themeCycle.auto': 'Auto',
+  'themeCycle.light': 'Light',
+  'themeCycle.dark': 'Dark',
 
   'settingsButton.aria': 'Settings',
 
@@ -421,15 +455,16 @@ export const en: Record<TranslationKey, TranslationEntry> = {
   'clients.cardSentiment.neutral': 'neutral',
   'clients.cardSentiment.negative': 'negative',
 
-  'ask.prompt.1': 'Top 3 complaints this week',
+  'ask.prompt.1': 'Top complaints this week',
   'ask.prompt.2': 'Overview for 30 days',
-  'ask.prompt.3': 'What do clients praise',
+  'ask.prompt.3': 'Who praises the service',
   'ask.prompt.4': 'Find complaints about speed',
-  'ask.placeholder': 'Ask about metrics or clients…',
-  'ask.empty.title': 'Ask about your data.',
+  'ask.placeholder': 'Ask about feedback…',
+  'ask.empty.title': 'Ask about feedback.',
   'ask.empty.body':
-    'The agent will look into metrics, topics and clients and return a summary. You can switch to another tab while it works — the answer will wait for you here.',
+    'I answer from session data: metrics, topics, clients. You can switch to another section while the agent works — the answer will wait here.',
   'ask.failed': 'Couldn’t get a response.',
+  'ask.newChat': 'New chat',
 
   'chat.placeholder': 'Message…',
   'chat.message.aria': 'Message',
@@ -501,6 +536,10 @@ export const en: Record<TranslationKey, TranslationEntry> = {
   'metricKey.price_value': 'Price / value',
   'metricKey.staff_friendliness': 'Staff friendliness',
   'metricKey.improvement_wish': 'Suggestions',
+
+  'prizes.empty.title': 'Prizes',
+  'prizes.empty.body':
+    'The prizes section is coming soon — it will list rewards, draw stats, and rule configuration.',
 }
 
 export const translations: Record<Language, Record<TranslationKey, TranslationEntry>> = {

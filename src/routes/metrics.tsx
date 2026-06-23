@@ -41,7 +41,6 @@ import {
 import { cn } from '@/lib/utils'
 import { useT, useLanguage, numberLocale, type Language } from '@/lib/i18n'
 import type { MetricsResponse, QuestionsResponse } from '@/lib/api/types'
-import { ADMIN_NAV } from './nav'
 
 type GroupBy = 'day' | 'week'
 
@@ -125,7 +124,7 @@ export function MetricsRoute() {
   const periodLabel = formatRangeLabel(selection, t, lang)
 
   return (
-    <AppShell title={t('title.metrics')} navItems={ADMIN_NAV}>
+    <AppShell title={t('title.metrics')}>
       <div className="flex flex-col gap-4">
         <FilterBar
           metricKey={displayKey}

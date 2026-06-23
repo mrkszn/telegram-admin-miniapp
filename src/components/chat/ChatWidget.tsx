@@ -85,7 +85,9 @@ export const ChatWidget = forwardRef<ChatWidgetHandle, ChatWidgetProps>(function
       </div>
       <form
         onSubmit={submit}
-        className="flex items-end gap-2 border-t border-line bg-bg/90 px-2 py-2 backdrop-blur-md"
+        // pb = baseline 0.5rem + safe-area inset so the composer clears the
+        // iOS home-indicator strip instead of sitting flush under it.
+        className="flex items-end gap-2 border-t border-line bg-bg/90 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] backdrop-blur-md"
       >
         <textarea
           ref={inputRef}

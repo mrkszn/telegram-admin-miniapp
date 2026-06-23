@@ -1,5 +1,4 @@
-import { useCallback } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { AppShell } from '@/components/layout/AppShell'
 import { BackButton } from '@/components/layout/BackButton'
 import { Message } from '@/components/chat/Message'
@@ -8,16 +7,18 @@ import { SentimentChip } from '@/components/sessions/SentimentChip'
 import { BrandSpinner } from '@/components/feedback/BrandSpinner'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { useApi } from '@/lib/hooks/useApi'
+import { useFallbackBack } from '@/lib/hooks/useFallbackBack'
 import { fetchSessionDetail } from '@/lib/api/admin'
 import { useT, useLanguage, dateLocale } from '@/lib/i18n'
 import type { SessionAnswer, SessionDetail, SessionMessage } from '@/lib/api/types'
-import { ADMIN_NAV } from './nav'
 
 export function SessionRoute() {
   const t = useT()
-  const navigate = useNavigate()
   const { id = '' } = useParams<{ id: string }>()
-  const goBack = useCallback(() => navigate(-1), [navigate])
+  // Falls back to /dashboard when /sessions/:id is a deep-link entry with
+  // no history to pop — otherwise navigate(-1) would no-op and the user
+  // would be stranded (hamburger is suppressed when onBack is set).
+  const goBack = useFallbackBack('/dashboard')
 
   const { data, error, isLoading, refetch } = useApi<SessionDetail>(
     id ? `session|${id}` : null,
@@ -25,12 +26,7 @@ export function SessionRoute() {
   )
 
   return (
-    <AppShell
-      title={t('session.title')}
-      navItems={ADMIN_NAV}
-      headerRight={null}
-      onBack={goBack}
-    >
+    <AppShell title={t('session.title')} headerRight={null} onBack={goBack}>
       <BackButton onClick={goBack} />
       <div className="flex flex-col gap-5">
         {error ? (

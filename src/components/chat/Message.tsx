@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
-import { Sparkles, User2 } from 'lucide-react'
+import { User2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { BrandMark } from '@/components/brand/BrandMark'
 
 export type MessageRole = 'user' | 'agent' | 'thinking'
 
@@ -37,9 +38,10 @@ export function Message({ role, content, chart, className }: MessageProps) {
     >
       <div className={cn('flex w-full gap-2', rowClass[role])}>
         {role !== 'user' ? (
-          <div className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-line bg-surface text-muted">
-            <Sparkles className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-          </div>
+          // BrandMark anchors the agent (and "thinking") bubbles with the
+          // InsightFlow signature — the same gradient tile the user sees in
+          // the drawer header and the splash, scaled down to the chat row.
+          <BrandMark size={28} className="mt-0.5" />
         ) : null}
         <div
           className={cn(

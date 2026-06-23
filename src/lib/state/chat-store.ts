@@ -78,6 +78,14 @@ async function submitAskWithRetry(
   }
 }
 
+// Monotonic generation counter for in-flight send() promises. Every send
+// captures the counter at the moment it fires; clearChat bumps the counter
+// to invalidate any pending request — when its promise resolves it will
+// see the mismatch and silently bail instead of pushing an orphan agent
+// reply into the freshly-emptied chat. Module-scoped so it survives store
+// resets and isn't part of persisted state.
+let sendGeneration = 0
+
 export const useChatStore = create<ChatState>()(
   persist(
     (set, get) => ({
@@ -95,6 +103,10 @@ export const useChatStore = create<ChatState>()(
           role: 'user',
           content: trimmed,
         }
+        // Snapshot the generation BEFORE the await so a clearChat() during
+        // the request bumps the counter and we can detect the mismatch on
+        // resolve.
+        const myGen = ++sendGeneration
         // Push the user's question + flip the busy flag synchronously so
         // any route reading the store sees the same state. The agent
         // response will land here even if the user navigated away — that's
@@ -109,6 +121,11 @@ export const useChatStore = create<ChatState>()(
 
         try {
           const res = await submitAskWithRetry(trimmed, history)
+          // The chat was cleared (or another send superseded ours) while we
+          // were waiting on the network. Drop the response on the floor —
+          // committing it now would either append an orphan agent message
+          // to an empty chat, or step on a newer in-flight request.
+          if (myGen !== sendGeneration) return
           const agentMsg: StoredChatMessage = {
             id: nextId(),
             role: 'agent',
@@ -120,6 +137,10 @@ export const useChatStore = create<ChatState>()(
             isBusy: false,
           })
         } catch (err) {
+          // Same generation guard for the error path — a stale failure
+          // shouldn't resurrect an error banner the user already dismissed
+          // by starting a new chat.
+          if (myGen !== sendGeneration) return
           const apiErr = toApiError(err)
           set({
             error: apiErr.message || translate(getLanguage(), 'ask.failed'),
@@ -133,6 +154,9 @@ export const useChatStore = create<ChatState>()(
       },
 
       clearChat() {
+        // Invalidate any in-flight send so its eventual resolve becomes a
+        // no-op (see myGen check above).
+        sendGeneration++
         set({ messages: [], error: null, isBusy: false })
       },
 

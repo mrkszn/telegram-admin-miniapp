@@ -3,8 +3,8 @@ import { createRoot } from 'react-dom/client'
 
 import '@fontsource-variable/geist/index.css'
 import '@fontsource-variable/geist-mono/index.css'
-// Instrument Serif removed — headings now use Geist (see tokens.css).
-// Re-add imports if you flip --font-head back to 'Instrument Serif'.
+import '@fontsource/instrument-serif/400.css'
+import '@fontsource/instrument-serif/400-italic.css'
 
 import './styles/tokens.css'
 import './styles/globals.css'
