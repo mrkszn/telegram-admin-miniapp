@@ -6,7 +6,7 @@
  *  4. the theme block is gone (owned by the top-level header toggle now)
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { setLanguage } from '@/lib/i18n'
@@ -101,15 +101,15 @@ describe('SettingsRoute', () => {
     expect(screen.getByText('Повторити')).toBeInTheDocument()
   })
 
-  it('exposes a gear → /settings nav contract via the rendered title', async () => {
+  it('renders the title + a back affordance (drawer entry is reached from any other route)', async () => {
     fetchSettings.mockResolvedValueOnce(defaults())
     renderRoute()
     expect(
       await screen.findByRole('heading', { name: 'Налаштування' }),
     ).toBeInTheDocument()
-    // bottom nav is still the shared 5-slot admin nav
-    const nav = screen.getByRole('navigation', { name: 'Основна навігація' })
-    expect(within(nav).getByText('Головна')).toBeInTheDocument()
+    // Settings opens deep from the drawer → it shows the in-app back arrow
+    // instead of the hamburger so the user can return to the previous tab.
+    expect(screen.getByRole('button', { name: 'Назад' })).toBeInTheDocument()
   })
 
   it('no longer renders the theme section', async () => {

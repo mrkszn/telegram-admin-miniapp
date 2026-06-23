@@ -30,7 +30,6 @@ import type {
   SemanticSearchResponse,
   TopicsResponse,
 } from '@/lib/api/types'
-import { ADMIN_NAV } from './nav'
 
 type SearchMode = 'semantic' | 'name' | 'topics'
 
@@ -57,7 +56,7 @@ export function ClientsRoute() {
   ]
 
   return (
-    <AppShell title={t('title.clients')} navItems={ADMIN_NAV}>
+    <AppShell title={t('title.clients')}>
       <div className="flex flex-col gap-4">
         <SegmentedControl
           label={t('clients.mode.aria')}
