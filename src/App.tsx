@@ -1,23 +1,24 @@
 import { Suspense, useEffect, type ReactNode } from 'react'
-import { RouterProvider, createBrowserRouter, Navigate, Outlet } from 'react-router-dom'
+import { RouterProvider, createBrowserRouter } from 'react-router-dom'
 import { ThemeProvider } from '@/components/layout/ThemeProvider'
-import { AuthGate } from '@/components/layout/AuthGate'
-import { AppDrawer } from '@/components/layout/AppDrawer'
 import { LanguageSync } from '@/lib/i18n/LanguageSync'
+import { BgOrbs } from '@/components/feedback/BgOrbs'
 import { BrandSpinner } from '@/components/feedback/BrandSpinner'
 import { RouteErrorBoundary } from '@/components/feedback/RouteErrorBoundary'
 import { lazyWithRetry, clearChunkReloadFlag } from '@/lib/lazy-with-retry'
-import { LandingRouter } from '@/routes/landing'
+import { RootRoute } from '@/routes/root'
+import { DashboardRoute } from '@/routes/dashboard'
 
 // Lazy routes — each becomes its own async chunk fetched on navigation.
-// /metrics pulls in @tremor/react (and chat embeds it on-demand via
-// ChartFromText), so lazy-loading keeps the chart bundle out of the
-// initial paint. LandingRouter is eager (it's the URL entry point); the
-// ChatRoute it renders is also eager but still benefits from the
-// RouteErrorBoundary + Suspense wrapper for ChartFromText chunk failures.
-const DashboardRoute = lazyWithRetry(() =>
-  import('@/routes/dashboard').then((m) => ({ default: m.DashboardRoute })),
-)
+// Critically, /metrics and /ask are the only screens pulling in @tremor/react
+// (Recharts ≈ charts-*.js), so lazy-loading them keeps that heavy chunk out of
+// the initial bundle. RootRoute (auth bootstrap) and DashboardRoute (landing)
+// stay eager so the first screen paints without an extra round-trip.
+//
+// `lazyWithRetry` wraps each dynamic import so a stale-chunk failure after a
+// deploy retries a couple of times, then triggers a single auto-reload guarded
+// by sessionStorage. If even the reload can't recover, RouteErrorBoundary
+// shows a manual fallback with a Reload button.
 const MetricsRoute = lazyWithRetry(() =>
   import('@/routes/metrics').then((m) => ({ default: m.MetricsRoute })),
 )
@@ -26,6 +27,9 @@ const TopicsRoute = lazyWithRetry(() =>
 )
 const ClientsRoute = lazyWithRetry(() =>
   import('@/routes/clients').then((m) => ({ default: m.ClientsRoute })),
+)
+const AskRoute = lazyWithRetry(() =>
+  import('@/routes/ask').then((m) => ({ default: m.AskRoute })),
 )
 const SessionRoute = lazyWithRetry(() =>
   import('@/routes/session').then((m) => ({ default: m.SessionRoute })),
@@ -53,53 +57,30 @@ function RouteFallback() {
   )
 }
 
-/**
- * Root layout for the router. Mounts the single global AppDrawer above
- * every authenticated screen so navigating between routes doesn't tear
- * down its Radix portal / focus trap.
- */
-function RouterLayout() {
-  return (
-    <>
-      <Outlet />
-      <AppDrawer />
-    </>
-  )
-}
-
 const router = createBrowserRouter([
-  {
-    element: <RouterLayout />,
-    children: [
-      // `/` runs the cold/warm arbiter — fresh WebView → chat, warm
-      // restart → resume on the last visited tab.
-      { path: '/', element: lazyRoute(<LandingRouter />) },
-      { path: '/dashboard', element: lazyRoute(<DashboardRoute />) },
-      { path: '/metrics', element: lazyRoute(<MetricsRoute />) },
-      { path: '/topics', element: lazyRoute(<TopicsRoute />) },
-      { path: '/clients', element: lazyRoute(<ClientsRoute />) },
-      { path: '/sessions/:id', element: lazyRoute(<SessionRoute />) },
-      { path: '/settings', element: lazyRoute(<SettingsRoute />) },
-      { path: '/prizes', element: lazyRoute(<PrizesRoute />) },
-      // Soft redirect for the legacy /ask URL — bookmarks pointing at the
-      // old path still land in the chat.
-      { path: '/ask', element: <Navigate to="/" replace /> },
-    ],
-  },
+  { path: '/', element: <RootRoute /> },
+  { path: '/dashboard', element: <DashboardRoute /> },
+  { path: '/metrics', element: lazyRoute(<MetricsRoute />) },
+  { path: '/topics', element: lazyRoute(<TopicsRoute />) },
+  { path: '/clients', element: lazyRoute(<ClientsRoute />) },
+  { path: '/ask', element: lazyRoute(<AskRoute />) },
+  { path: '/sessions/:id', element: lazyRoute(<SessionRoute />) },
+  { path: '/settings', element: lazyRoute(<SettingsRoute />) },
+  { path: '/prizes', element: lazyRoute(<PrizesRoute />) },
 ])
 
 export function App() {
   // Clear the one-shot chunk-reload guard once the new shell is up so the
-  // next deploy's chunk miss can use the auto-reload path again.
+  // next deploy's chunk miss can use the auto-reload path again. Runs on
+  // every mount, but the underlying sessionStorage write is cheap.
   useEffect(() => {
     clearChunkReloadFlag()
   }, [])
   return (
     <ThemeProvider>
       <LanguageSync />
-      <AuthGate>
-        <RouterProvider router={router} />
-      </AuthGate>
+      <BgOrbs />
+      <RouterProvider router={router} />
     </ThemeProvider>
   )
 }

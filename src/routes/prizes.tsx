@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { AppShell } from '@/components/layout/AppShell'
 import { BackButton } from '@/components/layout/BackButton'
 import { Button } from '@/components/ui/button'
@@ -6,13 +7,7 @@ import { Input } from '@/components/ui/input'
 import { BrandSpinner } from '@/components/feedback/BrandSpinner'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { useApi } from '@/lib/hooks/useApi'
-import { useFallbackBack } from '@/lib/hooks/useFallbackBack'
 import { useT, type Translator } from '@/lib/i18n'
-// /prizes is reachable both as a top-level drawer entry AND via the
-// Settings → Prizes shortcut. The header shows the hamburger (drawer
-// affordance) for cross-navigation; the Telegram native BackButton bridge
-// still drives an in-WebView back to /settings (or the chat landing as a
-// fallback when /prizes is the cold-open entry).
 import { getPrizes, updatePrize } from '@/lib/api/admin'
 import type {
   ApiError,
@@ -21,6 +16,7 @@ import type {
   PrizeTierUpdate,
   PrizesResponse,
 } from '@/lib/api/types'
+import { ADMIN_NAV } from './nav'
 
 const TIER_ORDER: PrizeTier[] = ['small', 'medium', 'large']
 const TIER_LABEL_KEYS = {
@@ -31,9 +27,8 @@ const TIER_LABEL_KEYS = {
 
 export function PrizesRoute() {
   const t = useT()
-  // /prizes is reached via the Settings shortcut; fall back to /settings when
-  // history is empty (deep-link / cold-open), else pop one stack entry.
-  const goBack = useFallbackBack('/settings')
+  const navigate = useNavigate()
+  const goBack = useCallback(() => navigate('/settings'), [navigate])
 
   const { data, error, isLoading, refetch } = useApi<PrizesResponse>('prizes', () =>
     getPrizes(),
@@ -46,7 +41,12 @@ export function PrizesRoute() {
   }, [data])
 
   return (
-    <AppShell title={t('title.prizes')} headerRight={null}>
+    <AppShell
+      title={t('title.prizes')}
+      navItems={ADMIN_NAV}
+      headerRight={null}
+      onBack={goBack}
+    >
       <BackButton onClick={goBack} />
       <div className="flex flex-col gap-5">
         {error ? (

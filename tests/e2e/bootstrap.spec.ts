@@ -2,12 +2,11 @@ import { test, expect } from '@playwright/test'
 
 /**
  * Bootstrap smoke. Injects a fake `window.Telegram.WebApp` + intercepts the
- * auth POST so we can verify the full chain (initData → JWT → first render)
- * without any real backend. After the InsightFlow redesign the landing is
- * the chat itself — no `/dashboard` redirect to follow.
+ * auth POST so we can verify the full chain (initData → JWT → redirect →
+ * /dashboard render) without any real backend.
  */
 
-test('bootstraps auth and renders the chat landing', async ({ page, context }) => {
+test('bootstraps auth and renders /dashboard', async ({ page, context }) => {
   // The real telegram-web-app.js script (loaded from index.html) would
   // overwrite our window.Telegram mock — block it.
   await context.route('**/telegram-web-app.js', (route) =>
@@ -74,10 +73,7 @@ test('bootstraps auth and renders the chat landing', async ({ page, context }) =
   })
 
   await page.goto('/')
-  await expect(page).toHaveURL(/\/$/, { timeout: 10_000 })
-  await expect(page.getByRole('heading', { level: 1, name: 'Чат' })).toBeVisible()
-  // Hamburger trigger — the only way into the drawer (replaces the BottomNav).
-  await expect(page.getByRole('button', { name: 'Меню' })).toBeVisible()
-  // Empty-state editorial title.
-  await expect(page.getByText('Спитай про feedback.')).toBeVisible()
+  await expect(page).toHaveURL(/\/dashboard$/, { timeout: 10_000 })
+  await expect(page.getByRole('heading', { name: 'Зведення' })).toBeVisible()
+  await expect(page.getByRole('navigation', { name: 'Основна навігація' })).toBeVisible()
 })

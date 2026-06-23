@@ -21,6 +21,7 @@ import { fetchTopics, fetchTopicClients, type DateRange } from '@/lib/api/admin'
 import { cn } from '@/lib/utils'
 import { useT, useLanguage } from '@/lib/i18n'
 import type { TopicCount, TopicSentiment, TopicsResponse } from '@/lib/api/types'
+import { ADMIN_NAV } from './nav'
 
 export function TopicsRoute() {
   const t = useT()
@@ -56,7 +57,7 @@ export function TopicsRoute() {
   })
 
   return (
-    <AppShell title={t('title.topics')}>
+    <AppShell title={t('title.topics')} navItems={ADMIN_NAV}>
       <div className="flex flex-col gap-4">
         <DateRangeChips value={selection} onChange={setSelection} />
 

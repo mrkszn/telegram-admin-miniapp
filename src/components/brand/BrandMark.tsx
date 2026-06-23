@@ -1,60 +1,63 @@
+import { useId } from 'react'
 import { cn } from '@/lib/utils'
 
-export type BrandMarkVariant = 'gradient' | 'mono' | 'outline'
-
-interface BrandMarkProps {
-  /** Tile edge length in px. Drives glyph size and the default radius (~size * 0.25). */
+/**
+ * InsightFlow brand mark — the wordless wave glyph.
+ *
+ * Visual reference: docs/branding screenshot (sine wave in violet→cyan
+ * gradient, no tile). Used as the icon-only mark in the auth gate and any
+ * other branded splash that already carries the wordmark in copy.
+ *
+ * Renders as inline SVG with `currentColor`-independent gradient strokes;
+ * the wave reads on both light and dark surfaces. `radius` is kept on the
+ * prop signature for backward compat with callers that previously rendered
+ * a rounded tile — it's a no-op in this glyph-only form.
+ */
+export interface BrandMarkProps {
+  /** Pixel size of the bounding box. Default 32. */
   size?: number
-  /** Optional border-radius override in px. Defaults to `Math.round(size * 0.25)`. */
+  /** Deprecated: tile radius (the legacy "italic-i tile" form). Ignored
+   *  by the new glyph mark but kept so existing callsites don't break. */
   radius?: number
-  /** `gradient` = the full violet wash (default). `mono` = solid --ink for
-   *  favicon-style mono renders. `outline` = subtle bordered tile for
-   *  inverted brand contexts. */
-  variant?: BrandMarkVariant
   className?: string
-  /** Decorative by default — set a string when the mark stands alone. */
+  /** Pass a string when the mark stands alone (no adjacent wordmark). */
   ariaLabel?: string
 }
 
-/**
- * The InsightFlow brand mark: a rounded tile with a serif italic `i` glyph.
- * Sourced from design/iterations/insightflow/components.jsx → `BrandMark`.
- * Use in drawer header, chat-agent avatar, splash, favicon SVG.
- */
-export function BrandMark({
-  size = 32,
-  radius,
-  variant = 'gradient',
-  className,
-  ariaLabel,
-}: BrandMarkProps) {
-  const r = radius ?? Math.round(size * 0.25)
-  const glyphSize = Math.round(size * 0.66)
+export function BrandMark({ size = 32, className, ariaLabel }: BrandMarkProps) {
+  // useId so multiple marks on the same page get unique gradient ids and
+  // don't trample each other when one is unmounted (Safari quirk: shared
+  // <linearGradient> ids stop painting once any referencer drops).
+  const gradId = `bm-grad-${useId().replace(/:/g, '')}`
   const decorative = ariaLabel == null
-  const variantClass =
-    variant === 'gradient'
-      ? 'bg-grad-brand text-white shadow-[0_4px_12px_-3px_color-mix(in_srgb,var(--primary)_55%,transparent)]'
-      : variant === 'outline'
-        ? 'border border-line bg-surface text-ink'
-        : 'bg-ink text-bg'
   return (
-    <span
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 32 20"
+      fill="none"
       aria-hidden={decorative ? true : undefined}
       role={decorative ? undefined : 'img'}
       aria-label={ariaLabel}
-      className={cn(
-        'inline-grid shrink-0 place-items-center font-serif italic leading-none',
-        variantClass,
-        className,
-      )}
-      style={{
-        width: size,
-        height: size,
-        borderRadius: r,
-        fontSize: glyphSize,
-      }}
+      className={cn('shrink-0', className)}
     >
-      i
-    </span>
+      <defs>
+        <linearGradient id={gradId} x1="0%" y1="50%" x2="100%" y2="50%">
+          <stop offset="0%" stopColor="#7c3aed" />
+          <stop offset="55%" stopColor="#a855f7" />
+          <stop offset="100%" stopColor="#06b6d4" />
+        </linearGradient>
+      </defs>
+      {/* Two-cycle sine: up-peak near (8,3) → cross at (16,10) → down-trough
+          near (24,17) → end at (30,10). Stroke width tuned so the glyph
+          reads at 24-64 px without disappearing. */}
+      <path
+        d="M 2 10 C 5 3, 11 3, 16 10 S 27 17, 30 10"
+        stroke={`url(#${gradId})`}
+        strokeWidth={2.6}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   )
 }

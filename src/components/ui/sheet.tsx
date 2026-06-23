@@ -40,33 +40,22 @@ const sheetVariants = cva(
 
 interface SheetContentProps
   extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
-    VariantProps<typeof sheetVariants> {
-  /**
-   * Skip the default `p-4` wrapper + close-button affordance. Use when the
-   * caller fully owns the inner layout (e.g. the AppDrawer with its own
-   * brand header / nav / footer scaffolding).
-   */
-  flush?: boolean
-}
+    VariantProps<typeof sheetVariants> {}
 
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
   SheetContentProps
->(({ side = 'bottom', className, children, flush = false, ...props }, ref) => (
+>(({ side = 'bottom', className, children, ...props }, ref) => (
   <SheetPortal>
     <SheetOverlay />
     <SheetPrimitive.Content ref={ref} className={cn(sheetVariants({ side }), className)} {...props}>
-      {flush ? (
-        children
-      ) : (
-        <div className="p-4">
-          {children}
-          <SheetPrimitive.Close className="absolute right-4 top-4 rounded-tag opacity-70 transition-opacity hover:opacity-100">
-            <X className="h-4 w-4" />
-            <span className="sr-only">Close</span>
-          </SheetPrimitive.Close>
-        </div>
-      )}
+      <div className="p-4">
+        {children}
+        <SheetPrimitive.Close className="absolute right-4 top-4 rounded-tag opacity-70 transition-opacity hover:opacity-100">
+          <X className="h-4 w-4" />
+          <span className="sr-only">Close</span>
+        </SheetPrimitive.Close>
+      </div>
     </SheetPrimitive.Content>
   </SheetPortal>
 ))
