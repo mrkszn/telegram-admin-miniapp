@@ -25,7 +25,7 @@ export function AskAiCta({ question, label, className }: AskAiCtaProps) {
 
   function onClick() {
     enqueueQuestion(question)
-    navigate('/')
+    navigate('/ask')
   }
 
   return (

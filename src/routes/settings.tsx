@@ -1,12 +1,11 @@
 import { useCallback, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { AppShell } from '@/components/layout/AppShell'
 import { BackButton } from '@/components/layout/BackButton'
 import { SegmentedControl } from '@/components/ui/segmented'
 import { BrandSpinner } from '@/components/feedback/BrandSpinner'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { useApi } from '@/lib/hooks/useApi'
-import { useFallbackBack } from '@/lib/hooks/useFallbackBack'
 import { useT, setLanguage } from '@/lib/i18n'
 import { fetchSettings, updateSettings } from '@/lib/api/admin'
 import type {
@@ -15,14 +14,14 @@ import type {
   ApiError,
   SettingsLanguage,
 } from '@/lib/api/types'
+import { ADMIN_NAV } from './nav'
 
 /* ── route ──────────────────────────────────────────────── */
 
 export function SettingsRoute() {
   const t = useT()
-  // /settings opened cold (deep link / refresh) has no history to pop;
-  // useFallbackBack routes to the chat landing in that case.
-  const goBack = useFallbackBack('/')
+  const navigate = useNavigate()
+  const goBack = useCallback(() => navigate('/dashboard'), [navigate])
 
   const { data, error, isLoading, refetch } = useApi<AdminSettings>(
     'settings',
@@ -30,7 +29,12 @@ export function SettingsRoute() {
   )
 
   return (
-    <AppShell title={t('title.settings')} headerRight={null} onBack={goBack}>
+    <AppShell
+      title={t('title.settings')}
+      navItems={ADMIN_NAV}
+      headerRight={null}
+      onBack={goBack}
+    >
       <BackButton onClick={goBack} />
       <div className="flex flex-col gap-6">
         {error ? (

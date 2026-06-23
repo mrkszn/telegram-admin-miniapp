@@ -6,7 +6,7 @@ import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 
 interface AskAiMarkerProps {
-  /** Pre-filled question routed to the chat landing (/). */
+  /** Pre-filled question routed to /ask. */
   question: string
   /** Optional override for the aria-label. Defaults to the generic "ask AI". */
   ariaLabel?: string
@@ -15,9 +15,9 @@ interface AskAiMarkerProps {
 
 /**
  * Small icon button — taps queue a pre-built question with the chat store
- * and navigate to the chat landing (/), where ChatRoute flushes the queue
- * and fires it. The marker is its own clickable zone with stopPropagation,
- * so containing cards / list rows keep their original drill-down behaviour.
+ * and navigate to /ask, where AskRoute flushes the queue and fires it. The
+ * marker is its own clickable zone with stopPropagation, so containing
+ * cards / list rows keep their original drill-down behaviour.
  */
 export function AskAiMarker({ question, ariaLabel, className }: AskAiMarkerProps) {
   const t = useT()
@@ -28,7 +28,7 @@ export function AskAiMarker({ question, ariaLabel, className }: AskAiMarkerProps
     e.stopPropagation()
     e.preventDefault()
     enqueueQuestion(question)
-    navigate('/')
+    navigate('/ask')
   }
 
   return (

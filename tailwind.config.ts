@@ -195,13 +195,6 @@ const config: Config = {
       transitionTimingFunction: {
         smooth: 'cubic-bezier(0.2, 0, 0, 1)',
       },
-      backgroundImage: {
-        // Brand gradient — the InsightFlow violet→indigo wash. Used on hero
-        // CTAs, drawer footer accents, and BrandMark fills.
-        'grad-brand': 'var(--grad-brand)',
-        // Soft radial wash that backs the chat empty state + bootstrap splash.
-        'grad-hero': 'var(--grad-hero)',
-      },
     },
   },
   plugins: [animate],

@@ -1,57 +1,35 @@
 import { cn } from '@/lib/utils'
 
-export type BrandMarkVariant = 'gradient' | 'mono' | 'outline'
-
-interface BrandMarkProps {
-  /** Tile edge length in px. Drives glyph size and the default radius (~size * 0.25). */
+/**
+ * Brand mark: a gradient tile with an italic serif "i".
+ *
+ * Visual reference: design/iterations/insightflow/components.jsx (BrandMark).
+ * Gradient is hardcoded to indigo here so the auth gate paints correctly
+ * before the full InsightFlow design-token migration lands.
+ */
+export interface BrandMarkProps {
+  /** Pixel size of the square. Default 32. */
   size?: number
-  /** Optional border-radius override in px. Defaults to `Math.round(size * 0.25)`. */
+  /** Border radius in px. Default 8. */
   radius?: number
-  /** `gradient` = the full violet wash (default). `mono` = solid --ink for
-   *  favicon-style mono renders. `outline` = subtle bordered tile for
-   *  inverted brand contexts. */
-  variant?: BrandMarkVariant
   className?: string
-  /** Decorative by default — set a string when the mark stands alone. */
-  ariaLabel?: string
 }
 
-/**
- * The InsightFlow brand mark: a rounded tile with a serif italic `i` glyph.
- * Sourced from design/iterations/insightflow/components.jsx → `BrandMark`.
- * Use in drawer header, chat-agent avatar, splash, favicon SVG.
- */
-export function BrandMark({
-  size = 32,
-  radius,
-  variant = 'gradient',
-  className,
-  ariaLabel,
-}: BrandMarkProps) {
-  const r = radius ?? Math.round(size * 0.25)
-  const glyphSize = Math.round(size * 0.66)
-  const decorative = ariaLabel == null
-  const variantClass =
-    variant === 'gradient'
-      ? 'bg-grad-brand text-white shadow-[0_4px_12px_-3px_color-mix(in_srgb,var(--primary)_55%,transparent)]'
-      : variant === 'outline'
-        ? 'border border-line bg-surface text-ink'
-        : 'bg-ink text-bg'
+export function BrandMark({ size = 32, radius = 8, className }: BrandMarkProps) {
   return (
     <span
-      aria-hidden={decorative ? true : undefined}
-      role={decorative ? undefined : 'img'}
-      aria-label={ariaLabel}
-      className={cn(
-        'inline-grid shrink-0 place-items-center font-serif italic leading-none',
-        variantClass,
-        className,
-      )}
+      aria-hidden="true"
+      className={cn('inline-grid select-none place-items-center font-serif italic', className)}
       style={{
         width: size,
         height: size,
-        borderRadius: r,
-        fontSize: glyphSize,
+        borderRadius: radius,
+        background: 'linear-gradient(135deg, #818cf8 0%, #4f46e5 50%, #3730a3 100%)',
+        color: '#fff',
+        fontSize: Math.round(size * 0.62),
+        lineHeight: 1,
+        boxShadow: '0 4px 14px -4px rgba(79, 70, 229, 0.55)',
+        flexShrink: 0,
       }}
     >
       i

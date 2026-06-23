@@ -23,6 +23,7 @@ import { fetchOverview, fetchSessions, type DateRange } from '@/lib/api/admin'
 import { AskAiCta } from '@/components/chat/AskAiCta'
 import { useT, useLanguage, type Translator } from '@/lib/i18n'
 import type { OverviewResponse, SessionSentiment, TopicCount } from '@/lib/api/types'
+import { ADMIN_NAV } from './nav'
 
 /* ── formatters ─────────────────────────────────────────── */
 
@@ -90,7 +91,7 @@ export function DashboardRoute() {
   )
 
   return (
-    <AppShell title={t('title.dashboard')}>
+    <AppShell title={t('title.dashboard')} navItems={ADMIN_NAV}>
       <div className="flex flex-col gap-4">
         <DateRangeChips value={selection} onChange={setSelection} />
 
